@@ -130,7 +130,6 @@ class SettingController extends Controller
         $conn = mysqli_connect($host, $username, $password, $database_name);
         $conn->set_charset("utf8");
 
-
         // Get All Table Names From the Database
         $tables = array();
         $sql = "SHOW TABLES";
@@ -195,10 +194,10 @@ class SettingController extends Controller
             $zip->open(public_path() . '/' . $zipFileName, ZipArchive::CREATE);
             //$zip->addFile($backup_file_name, $database_name . '_backup_' . time() . '.sql');
             $zip->addFile($backup_file_name, $database_name . '_backup_' . date('d-m-Y-H-i-s') . '.sql');
-            $zip->close();*/
+            $zip->close();
 
             // Download the SQL backup file to the browser
-            /*header('Content-Description: File Transfer');
+            header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename=' . basename($backup_file_name));
             header('Content-Transfer-Encoding: binary');
@@ -209,8 +208,8 @@ class SettingController extends Controller
             ob_clean();
             flush();
             readfile($backup_file_name);
-            exec('rm ' . $backup_file_name); */
-        /*}
+            exec('rm ' . $backup_file_name); 
+        }
         return redirect('public/' . $zipFileName);
     }*/
 
