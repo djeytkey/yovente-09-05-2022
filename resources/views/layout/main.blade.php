@@ -272,11 +272,11 @@
                                         <li id="sale-create-menu"><a
                                                 href="{{ route('sales.create') }}">{{ trans('file.Add Sale') }}</a>
                                         </li>
-                                        @if (Auth::user()->role_id == 1)
+                                        {{-- @if (Auth::user()->role_id == 1)
                                         <li id="sale-import-menu"><a
                                                 href="{{ url('sales/sale_by_csv') }}">{{ trans('file.Import Sale By CSV') }}</a>
                                         </li>
-                                        @endif
+                                        @endif --}}
                                     @endif
                                 @endif
                                 {{-- @if ($gift_card_permission_active)

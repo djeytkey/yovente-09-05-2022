@@ -334,24 +334,24 @@
                 <div class="modal-body">
                     <form>
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label>{{trans('file.Unit Price')}}</label>
                                     <input type="number" name="edit_unit_price" class="form-control" step="any">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label>{{trans('file.Quantity')}}</label>
                                     <input type="number" name="edit_qty" class="form-control" step="any">
                                 </div>
                             </div>
-                            {{-- <div class="col-md-4">
+                            <div class="col-md-4 d-none">
                                 <div class="form-group">
                                     <label>{{trans('file.Unit Discount')}}</label>
                                     <input type="number" name="edit_discount" class="form-control" step="any">
                                 </div>
-                            </div>                             --}}
+                            </div>                            
                         </div>                         
                         <?php
                             $tax_name_all[] = 'No Tax';
@@ -505,7 +505,7 @@ $('select[name="customer_city"]').on('change', function() {
             });
         },
         error:function(){
-            alert("No products in this warehouse");
+            alert("No products available for sale !");
             document.location.reload(true);
         }
     });
@@ -609,9 +609,9 @@ $('button[name="update_btn"]').on("click", function() {
         alert("Quantity can't be less than 1");
     }
 
-    var tax_rate_all = <?php echo json_encode($tax_rate_all) ?>;
-    tax_rate[rowindex] = parseFloat(tax_rate_all[$('select[name="edit_tax_rate"]').val()]);
-    tax_name[rowindex] = $('select[name="edit_tax_rate"] option:selected').text();
+    //var tax_rate_all = <?php echo json_encode($tax_rate_all) ?>;
+    //tax_rate[rowindex] = parseFloat(tax_rate_all[$('select[name="edit_tax_rate"]').val()]);
+    //tax_name[rowindex] = $('select[name="edit_tax_rate"] option:selected').text();
     if(product_type[pos] == 'standard') {
         var row_unit_operator = unit_operator[rowindex].slice(0, unit_operator[rowindex].indexOf(","));
         var row_unit_operation_value = unit_operation_value[rowindex].slice(0, unit_operation_value[rowindex].indexOf(","));
@@ -710,12 +710,13 @@ function productSearch(data) {
                 cols += '<td>' + data[0] + '<button type="button" class="edit-product btn btn-link" data-toggle="modal" data-target="#editModal"> <i class="dripicons-document-edit"></i></button></td>';
                 cols += '<td>' + data[1] + '</td>';
                 cols += '<td><input type="number" class="form-control qty" name="qty[]" value="1" step="any" required/></td>';
-                if(data[12]) {
-                    cols += '<td><input type="text" class="form-control batch-no" value="'+batch_no[pos]+'" required/> <input type="hidden" class="product-batch-id" name="product_batch_id[]" value="'+product_batch_id[pos]+'"/> </td>';
-                }
-                else {
-                    cols += '<td><input type="text" class="form-control batch-no" disabled/> <input type="hidden" class="product-batch-id" name="product_batch_id[]"/> </td>';
-                }
+                cols += '<td class="original_price">' + data[2].toFixed(2) + '</td>';
+                // if(data[12]) {
+                //     cols += '<td><input type="text" class="form-control batch-no" value="'+batch_no[pos]+'" required/> <input type="hidden" class="product-batch-id" name="product_batch_id[]" value="'+product_batch_id[pos]+'"/> </td>';
+                // }
+                // else {
+                //     cols += '<td><input type="text" class="form-control batch-no" disabled/> <input type="hidden" class="product-batch-id" name="product_batch_id[]"/> </td>';
+                // }
                 
                 cols += '<td class="net_unit_price"></td>';
                 cols += '<td class="discount">0.00</td>';
@@ -740,7 +741,7 @@ function productSearch(data) {
                     product_price.splice(rowindex, 0, parseFloat(product_warehouse_price[pos] * currency['exchange_rate']) + parseFloat(product_warehouse_price[pos] * currency['exchange_rate'] * customer_group_rate));
                 }
                 else {
-                    product_price.splice(rowindex, 0, parseFloat(data[2] * currency['exchange_rate']) + parseFloat(data[2] * currency['exchange_rate'] * customer_group_rate));
+                    product_price.splice(rowindex, 0, parseFloat(data[2] * currency['exchange_rate'])/* + parseFloat(data[2] * currency['exchange_rate'] * customer_group_rate)*/);
                 }
                 product_discount.splice(rowindex, 0, '0.00');
                 tax_rate.splice(rowindex, 0, parseFloat(data[3]));
@@ -1130,9 +1131,9 @@ $(document).on('submit', '.payment-form', function(e) {
     }
 });
 
-$("ul#sale").siblings('a').attr('aria-expanded','true');
-$("ul#sale").addClass("show");
-$("ul#sale li").eq(2).addClass("active");
+// $("ul#sale").siblings('a').attr('aria-expanded','true');
+// $("ul#sale").addClass("show");
+// $("ul#sale li").eq(2).addClass("active");
 </script>
 @endsection @section('scripts')
 <script type="text/javascript" src="https://js.stripe.com/v3/"></script>

@@ -75,14 +75,13 @@
                     <th class="not-exported"></th>
                     <th>{{trans('file.Date')}}</th>
                     <th>{{trans('file.reference')}}</th>
-                    <th>{{trans('file.Biller')}}</th>
                     <th>{{trans('file.customer')}}</th>
-                    <th>{{trans('file.Created By')}}</th>
-                    <th>{{trans('file.Payment Status')}}</th>
-                    <th>{{trans('file.Sale Status')}}</th>
+                    <th>{{trans('file.Phone')}}</th>
+                    <th>{{trans('file.Products')}}</th>
+                    <th>{{trans('file.Status')}}</th>
+                    <th>{{trans('file.City')}}</th>
                     <th>{{trans('file.grand total')}}</th>
-                    <th>{{trans('file.Paid')}}</th>
-                    <th>{{trans('file.Due')}}</th>
+                    <th>{{trans('file.Delivery Status')}}</th>
                     <th class="not-exported">{{trans('file.action')}}</th>
                 </tr>
             </thead>
@@ -90,30 +89,15 @@
             <tfoot class="tfoot active">
                 <tr>
                     <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                     <th>{{trans('file.Total')}}</th>
                     <th></th>
                     <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th class="noVis"></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th>{{trans('file.grand total')}}</th>
-                    <th>{{trans('file.Paid')}}</th>
-                    <th>{{trans('file.Due')}}</th>
                     <th></th>
                 </tr>
                 {{-- <tr>
@@ -769,40 +753,40 @@
 
     var starting_date = $("input[name=starting_date]").val(); 
     var ending_date = $("input[name=ending_date]").val();
-    var warehouse_id = $("#warehouse_id").val();
+    //var warehouse_id = $("#warehouse_id").val();
     var status_id = $("#status_id").val();
 
     $('#sale-table').DataTable( {
         "processing": true,
         "serverSide": true,
+        "searching": false,
         "ajax":{
             url:"sales/sale-data",
             data:{
                 all_permission: all_permission,
                 starting_date: starting_date,
                 ending_date: ending_date,
-                warehouse_id: warehouse_id,
+                //warehouse_id: warehouse_id,
                 status_id: status_id
             },
             dataType: "json",
             type:"post"
         },
         "createdRow": function( row, data, dataIndex ) {
-            $(row).addClass('sale-link');
-            $(row).attr('data-sale', data['sale']);
+            // $(row).addClass('sale-link');
+            // $(row).attr('data-sale', data['sale']);
         },
         "columns": [
             {"data": "key"},
             {"data": "date"},
             {"data": "reference_no"},
-            {"data": "valide_status_search"},
             {"data": "customer"},
-            {"data": "username"},
-            {"data": "payment_status"},
+            {"data": "phone"},
+            {"data": "products"},
             {"data": "valide_status"},
+            {"data": "city"},
             {"data": "grand_total"},
-            {"data": "paid_amount"},
-            {"data": "due"},
+            {"data": "delivery_status"},
             {"data": "options"},
         ],
         'language': {            
@@ -818,12 +802,12 @@
         'columnDefs': [
             {
                 "orderable": false,
-                'targets': [0, 4, 5, 6, 7, 8, 9, 10, 11],
+                'targets': [0, 5, 8, 10],
             },
-            {
-                'targets': 3,
-                className: 'noVis'
-            },
+            // {
+            //     'targets': 3,
+            //     className: 'noVis'
+            // },
             {
                 'render': function(data, type, row, meta){
                     if(type === 'display'){
@@ -918,12 +902,12 @@
                         alert('This feature is disable for demo!');
                 }
             },
-            // {
-            //     extend: 'colvis',
-            //     text: '{{trans("file.Column visibility")}}',
-            //     //columns: ':not(.noVis)'
-            //     columns: ':gt(0)'
-            // },
+            {
+                extend: 'colvis',
+                text: '{{trans("file.Column visibility")}}',
+                //columns: ':not(.noVis)'
+                columns: ':gt(0)'
+            },
         ],
         drawCallback: function () {
             var api = this.api();

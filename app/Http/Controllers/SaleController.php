@@ -78,7 +78,7 @@ class SaleController extends Controller
             }
             else {
                 //$starting_date = date("Y-m-d", strtotime(date('Y-m-d', strtotime('-1 year', strtotime(date('Y-m-d') )))));
-                $starting_date = "2022-01-01";
+                $starting_date = date("Y") . "-01-01";
                 $ending_date = date("Y-m-d");
             }
 
@@ -98,8 +98,7 @@ class SaleController extends Controller
         $columns = array( 
             1 => 'created_at', 
             2 => 'reference_no',
-            7 => 'grand_total',
-            8 => 'paid_amount',
+            8 => 'grand_total',
         );
 
         if($request->input('status_id') != 2)
@@ -379,9 +378,31 @@ class SaleController extends Controller
                 $nestedData['sold_by'] = $sale->user_id;
                 $nestedData['date'] = date(config('date_format'), strtotime($sale->created_at->toDateString()));
                 $nestedData['reference_no'] = $sale->reference_no;
-                $nestedData['biller'] = $sale->biller->name;
-                $nestedData['customer'] = $sale->customer->name;
+                $nestedData['customer'] = $sale->customer_name;
+                $nestedData['phone'] = $sale->customer_phone;
                 $nestedData['username'] = User::find($nestedData['sold_by'])->name;
+
+                if($sale->is_valide == 1)
+                {
+                    $nestedData['valide_status'] = '<div class="badge badge-success">'.trans('file.Confirmed').'</div>';
+                    $nestedData['valide_status_search'] = trans('file.Confirmed');
+                    
+                } else {
+                    $nestedData['valide_status'] = '<div class="badge badge-warning">'.trans('file.Not Confirmed').'</div>';
+                    $nestedData['valide_status_search'] = trans('file.Not Confirmed');
+                }
+
+                $lims_product_sale_data = Product_Sale::where('sale_id', $sale->id)->get();
+                $lims_product_sale_data_count = Product_Sale::where('sale_id', $sale->id)->count();
+                foreach ($lims_product_sale_data as $key => $product_sale_data) {
+                    $product_qty = $product_sale_data->qty;
+                    $product = Product::where('id', $product_sale_data->product_id)->first();
+                    $product_name = $product->name;
+                    if($product_sale_data->variant_id) {
+                        $variant_name = Variant::where('id', $product_sale_data->variant_id);
+                    }
+                    $nestedData['products'] += $product_name . ' ( ' . $product_qty . ' ' . $variant_name . ' )<br>';
+                }
 
                 if($sale->sale_status == 1){
                     $nestedData['sale_status'] = '<div class="badge badge-success">'.trans('file.Completed').'</div>';
@@ -405,15 +426,7 @@ class SaleController extends Controller
                 else
                     $nestedData['payment_status'] = '<div class="badge badge-success">'.trans('file.Paid').'</div>';
 
-                if($sale->is_valide == 1)
-                {
-                    $nestedData['valide_status'] = '<div class="badge badge-success">'.trans('file.Confirmed').'</div>';
-                    $nestedData['valide_status_search'] = trans('file.Confirmed');
-                    
-                } else {
-                    $nestedData['valide_status'] = '<div class="badge badge-warning">'.trans('file.Not Confirmed').'</div>';
-                    $nestedData['valide_status_search'] = trans('file.Not Confirmed');
-                }
+                
 
                 $nestedData['grand_total'] = number_format($sale->grand_total, 2);
                 $nestedData['paid_amount'] = number_format($sale->paid_amount, 2);
@@ -474,41 +487,181 @@ class SaleController extends Controller
                 else
                     $coupon_code = null;
 
-                $nestedData['sale'] = array( '[ 
-                    "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
-                    ' "'.$sale->reference_no.'"', //1
-                    ' "'.$sale_status.'"', //2
-                    ' "'.$sale->biller->name.'"', //3
-                    ' "'.$sale->biller->company_name.'"', //4
-                    ' "'.$sale->biller->email.'"', //5
-                    ' "'.$sale->biller->phone_number.'"', //6
-                    ' "'.$sale->biller->address.'"', //7
-                    ' "'.$sale->biller->city.'"', //8
-                    ' "'.$sale->customer->name.'"', //9
-                    ' "'.$sale->customer->phone_number.'"', //10
-                    ' "'.$sale->customer->address.'"', //11
-                    ' "'.$sale->customer->city.'"', //12
-                    ' "'.$sale->id.'"', //13
-                    ' "'.$sale->total_tax.'"', //14
-                    ' "'.$sale->total_discount.'"', //15
-                    ' "'.$sale->total_price.'"', //16
-                    ' "'.$sale->order_tax.'"', //17
-                    ' "'.$sale->order_tax_rate.'"', //18
-                    ' "'.$sale->order_discount.'"', //19
-                    ' "'.$sale->shipping_cost.'"', //20
-                    ' "'.$sale->grand_total.'"', //21
-                    ' "'.$sale->paid_amount.'"', //22
-                    ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //23
-                    ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //24
-                    ' "'.$sale->user->name.'"', //25
-                    ' "'.$sale->user->email.'"', //26
-                    ' "'.$sale->warehouse->name.'"', //27
-                    ' "'.$coupon_code.'"', //28
-                    ' "'.$sale->coupon_discount.'"', //29
-                    ' "'.$sale->user_id.'"', //30
-                    ' "'.$sale->is_valide.'"]' //31
-                );
+                $nestedData['sale'] = "Tarik";
+
+                // $nestedData['sale'] = array( '[ 
+                //     "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
+                //     ' "'.$sale->reference_no.'"', //1
+                //     ' "'.$sale_status.'"', //2
+                //     ' "'.$sale->biller->name.'"', //3
+                //     ' "'.$sale->biller->company_name.'"', //4
+                //     ' "'.$sale->biller->email.'"', //5
+                //     ' "'.$sale->biller->phone_number.'"', //6
+                //     ' "'.$sale->biller->address.'"', //7
+                //     ' "'.$sale->biller->city.'"', //8
+                //     ' "'.$sale->customer->name.'"', //9
+                //     ' "'.$sale->customer->phone_number.'"', //10
+                //     ' "'.$sale->customer->address.'"', //11
+                //     ' "'.$sale->customer->city.'"', //12
+                //     ' "'.$sale->id.'"', //13
+                //     ' "'.$sale->total_tax.'"', //14
+                //     ' "'.$sale->total_discount.'"', //15
+                //     ' "'.$sale->total_price.'"', //16
+                //     ' "'.$sale->order_tax.'"', //17
+                //     ' "'.$sale->order_tax_rate.'"', //18
+                //     ' "'.$sale->order_discount.'"', //19
+                //     ' "'.$sale->shipping_cost.'"', //20
+                //     ' "'.$sale->grand_total.'"', //21
+                //     ' "'.$sale->paid_amount.'"', //22
+                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //23
+                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //24
+                //     ' "'.$sale->user->name.'"', //25
+                //     ' "'.$sale->user->email.'"', //26
+                //     ' "'.$sale->warehouse->name.'"', //27
+                //     ' "'.$coupon_code.'"', //28
+                //     ' "'.$sale->coupon_discount.'"', //29
+                //     ' "'.$sale->user_id.'"', //30
+                //     ' "'.$sale->is_valide.'"]' //31
+                // );
                 $data[] = $nestedData;
+
+
+
+                //$nestedData['id'] = $sale->id;
+                // $nestedData['key'] = $key;
+                // $nestedData['sold_by'] = $sale->user_id;
+                // $nestedData['date'] = date(config('date_format'), strtotime($sale->created_at->toDateString()));
+                // $nestedData['reference_no'] = $sale->reference_no;
+                // $nestedData['biller'] = $sale->biller->name;
+                // $nestedData['customer'] = $sale->customer->name;
+                // $nestedData['username'] = User::find($nestedData['sold_by'])->name;
+
+                // if($sale->sale_status == 1){
+                //     $nestedData['sale_status'] = '<div class="badge badge-success">'.trans('file.Completed').'</div>';
+                //     $sale_status = trans('file.Completed');
+                // }
+                // elseif($sale->sale_status == 2){
+                //     $nestedData['sale_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
+                //     $sale_status = trans('file.Pending');
+                // }
+                // else{
+                //     $nestedData['sale_status'] = '<div class="badge badge-warning">'.trans('file.Draft').'</div>';
+                //     $sale_status = trans('file.Draft');
+                // }
+
+                // if($sale->payment_status == 1)
+                //     $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
+                // elseif($sale->payment_status == 2)
+                //     $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Due').'</div>';
+                // elseif($sale->payment_status == 3)
+                //     $nestedData['payment_status'] = '<div class="badge badge-warning">'.trans('file.Partial').'</div>';
+                // else
+                //     $nestedData['payment_status'] = '<div class="badge badge-success">'.trans('file.Paid').'</div>';
+
+                // if($sale->is_valide == 1)
+                // {
+                //     $nestedData['valide_status'] = '<div class="badge badge-success">'.trans('file.Confirmed').'</div>';
+                //     $nestedData['valide_status_search'] = trans('file.Confirmed');
+                    
+                // } else {
+                //     $nestedData['valide_status'] = '<div class="badge badge-warning">'.trans('file.Not Confirmed').'</div>';
+                //     $nestedData['valide_status_search'] = trans('file.Not Confirmed');
+                // }
+
+                // $nestedData['grand_total'] = number_format($sale->grand_total, 2);
+                // $nestedData['paid_amount'] = number_format($sale->paid_amount, 2);
+                // $nestedData['due'] = number_format($sale->grand_total - $sale->paid_amount, 2);
+                // $nestedData['options'] = '<div class="btn-group">
+                //             <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'.trans("file.action").'
+                //               <span class="caret"></span>
+                //               <span class="sr-only">Toggle Dropdown</span>
+                //             </button>
+                //             <ul class="dropdown-menu edit-options dropdown-menu-right dropdown-default" user="menu">';
+                //             if(($sale->is_valide == 1 && $sale->payment_status == 4) || Auth::id() == 1) {
+                //                 $nestedData['options'] .= '<li>
+                //                 <a href="'.route('sale.invoice', $sale->id).'" class="btn btn-link">
+                //                 <i class="fa fa-copy"></i> '.trans('file.Generate Invoice').'</a>
+                //                 </li>';
+                //             }
+                //             $nestedData['options'] .= '<li>
+                //                     <button type="button" class="btn btn-link view"><i class="fa fa-eye"></i> '.trans('file.View').'</button>
+                //                 </li>';
+                // if(in_array("sales-edit", $request['all_permission'])){
+                //     if($sale->is_valide != 1)
+                //     {
+                //         $nestedData['options'] .= '<li>
+                //         <a href="'.route('sales.edit', $sale->id).'" class="btn btn-link"><i class="dripicons-document-edit"></i> '.trans('file.edit').'</a>
+                //         </li>'; 
+                //     } elseif(Auth::id() == 1)
+                //     {
+                //         $nestedData['options'] .= '<li>
+                //         <a href="'.route('sales.edit', $sale->id).'" class="btn btn-link"><i class="dripicons-document-edit"></i> '.trans('file.edit').'</a>
+                //         </li>';
+                //     }
+                // }
+                // if (Auth::id() == 1)
+                // {
+                //     $nestedData['options'] .= 
+                //     '<li>
+                //         <button type="button" class="add-payment btn btn-link" data-id = "'.$sale->id.'" data-toggle="modal" data-target="#add-payment"><i class="fa fa-plus"></i> '.trans('file.Add Payment').'</button>
+                //     </li>
+                //     <li>
+                //         <button type="button" class="get-payment btn btn-link" data-id = "'.$sale->id.'"><i class="fa fa-money"></i> '.trans('file.View Payment').'</button>
+                //     </li>
+                //     <li>
+                //         <button type="button" class="add-delivery btn btn-link" data-id = "'.$sale->id.'"><i class="fa fa-truck"></i> '.trans('file.Add Delivery').'</button>
+                //     </li>';
+                // }
+                
+                // if(in_array("sales-delete", $request['all_permission']))
+                //     $nestedData['options'] .= \Form::open(["route" => ["sales.destroy", $sale->id], "method" => "DELETE"] ).'
+                //             <li>
+                //               <button type="submit" class="btn btn-link" onclick="return confirmDelete()"><i class="dripicons-trash"></i> '.trans("file.delete").'</button> 
+                //             </li>'.\Form::close().'
+                //         </ul>
+                //     </div>';
+                // // data for sale details by one click
+                // $coupon = Coupon::find($sale->coupon_id);
+                // if($coupon)
+                //     $coupon_code = $coupon->code;
+                // else
+                //     $coupon_code = null;
+
+                // $nestedData['sale'] = array( '[ 
+                //     "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
+                //     ' "'.$sale->reference_no.'"', //1
+                //     ' "'.$sale_status.'"', //2
+                //     ' "'.$sale->biller->name.'"', //3
+                //     ' "'.$sale->biller->company_name.'"', //4
+                //     ' "'.$sale->biller->email.'"', //5
+                //     ' "'.$sale->biller->phone_number.'"', //6
+                //     ' "'.$sale->biller->address.'"', //7
+                //     ' "'.$sale->biller->city.'"', //8
+                //     ' "'.$sale->customer->name.'"', //9
+                //     ' "'.$sale->customer->phone_number.'"', //10
+                //     ' "'.$sale->customer->address.'"', //11
+                //     ' "'.$sale->customer->city.'"', //12
+                //     ' "'.$sale->id.'"', //13
+                //     ' "'.$sale->total_tax.'"', //14
+                //     ' "'.$sale->total_discount.'"', //15
+                //     ' "'.$sale->total_price.'"', //16
+                //     ' "'.$sale->order_tax.'"', //17
+                //     ' "'.$sale->order_tax_rate.'"', //18
+                //     ' "'.$sale->order_discount.'"', //19
+                //     ' "'.$sale->shipping_cost.'"', //20
+                //     ' "'.$sale->grand_total.'"', //21
+                //     ' "'.$sale->paid_amount.'"', //22
+                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //23
+                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //24
+                //     ' "'.$sale->user->name.'"', //25
+                //     ' "'.$sale->user->email.'"', //26
+                //     ' "'.$sale->warehouse->name.'"', //27
+                //     ' "'.$coupon_code.'"', //28
+                //     ' "'.$sale->coupon_discount.'"', //29
+                //     ' "'.$sale->user_id.'"', //30
+                //     ' "'.$sale->is_valide.'"]' //31
+                // );
+                // $data[] = $nestedData;
             }
         }
         $json_data = array(
@@ -563,16 +716,16 @@ class SaleController extends Controller
         }
         
         $data['user_id'] = Auth::id();
-        if (Auth::id() > 2) $data['payment_status'] = 2;
+        //$data['payment_status'] = 2;
         if (!isset($data['is_valide'])) $data['is_valide'] = 0;
-        $cash_register_data = CashRegister::where([
-            ['user_id', $data['user_id']],
-            ['warehouse_id', $data['warehouse_id']],
-            ['status', true]
-        ])->first();
-
-        if($cash_register_data)
-            $data['cash_register_id'] = $cash_register_data->id;
+        // $cash_register_data = CashRegister::where([
+        //     ['user_id', $data['user_id']],
+        //     ['warehouse_id', $data['warehouse_id']], // ?????????????
+        //     ['status', true]
+        // ])->first();
+        // 
+        // if($cash_register_data)
+        //     $data['cash_register_id'] = $cash_register_data->id;
 
         if($data['pos']) {
             if(!isset($data['reference_no']))
@@ -596,7 +749,6 @@ class SaleController extends Controller
         else {
             if(!isset($data['reference_no']))
                 $data['reference_no'] = strtolower(Auth::user()->name) . date("dmy") . '-'. date("His");
-                //$data['reference_no'] = 'sr-' . date("Ymd") . '-'. date("his");
         }
 
         $document = $request->document;
@@ -623,23 +775,23 @@ class SaleController extends Controller
         }
 
         $lims_sale_data = Sale::create($data);
-        $lims_customer_data = Customer::find($data['customer_id']);
+        //$lims_customer_data = Customer::find($data['customer_id']);
         //collecting male data
-        $mail_data['email'] = $lims_customer_data->email;
-        $mail_data['reference_no'] = $lims_sale_data->reference_no;
-        $mail_data['sale_status'] = $lims_sale_data->sale_status;
-        $mail_data['payment_status'] = $lims_sale_data->payment_status;
-        $mail_data['total_qty'] = $lims_sale_data->total_qty;
-        $mail_data['total_price'] = $lims_sale_data->total_price;
-        $mail_data['order_tax'] = $lims_sale_data->order_tax;
-        $mail_data['order_tax_rate'] = $lims_sale_data->order_tax_rate;
-        $mail_data['order_discount'] = $lims_sale_data->order_discount;
-        $mail_data['shipping_cost'] = $lims_sale_data->shipping_cost;
-        $mail_data['grand_total'] = $lims_sale_data->grand_total;
-        $mail_data['paid_amount'] = $lims_sale_data->paid_amount;
+        // $mail_data['email'] = $lims_customer_data->email;
+        // $mail_data['reference_no'] = $lims_sale_data->reference_no;
+        // $mail_data['sale_status'] = $lims_sale_data->sale_status;
+        // $mail_data['payment_status'] = $lims_sale_data->payment_status;
+        // $mail_data['total_qty'] = $lims_sale_data->total_qty;
+        // $mail_data['total_price'] = $lims_sale_data->total_price;
+        // $mail_data['order_tax'] = $lims_sale_data->order_tax;
+        // $mail_data['order_tax_rate'] = $lims_sale_data->order_tax_rate;
+        // $mail_data['order_discount'] = $lims_sale_data->order_discount;
+        // $mail_data['shipping_cost'] = $lims_sale_data->shipping_cost;
+        // $mail_data['grand_total'] = $lims_sale_data->grand_total;
+        // $mail_data['paid_amount'] = $lims_sale_data->paid_amount;
 
         $product_id = $data['product_id'];
-        $product_batch_id = $data['product_batch_id'];
+        //$product_batch_id = $data['product_batch_id'];
         $product_code = $data['product_code'];
         $qty = $data['qty'];
         $sale_unit = $data['sale_unit'];
@@ -695,9 +847,10 @@ class SaleController extends Controller
                     if($lims_product_data->is_variant) {
                         $lims_product_variant_data->qty -= $quantity;
                         $lims_product_variant_data->save();
-                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id, $data['warehouse_id'])->first();
+                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id)->first();
+                        //$lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id, $data['warehouse_id'])->first();
                     }
-                    elseif($product_batch_id[$i]) {
+                    /*elseif($product_batch_id[$i]) {
                         $lims_product_warehouse_data = Product_Warehouse::where([
                             ['product_batch_id', $product_batch_id[$i] ],
                             ['warehouse_id', $data['warehouse_id'] ]
@@ -707,7 +860,7 @@ class SaleController extends Controller
                         //deduct product batch quantity
                         $lims_product_batch_data->qty -= $quantity;
                         $lims_product_batch_data->save();
-                    }
+                    }*/
                     else {
                         $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($id, $data['warehouse_id'])->first();
                     }
