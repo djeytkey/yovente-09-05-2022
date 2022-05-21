@@ -609,8 +609,24 @@ table.dataTable {
 	box-shadow: 0 0 35px 0 rgba(154,161,171,.15);
 }
 
+table.dataTable td, table.dataTable th {
+	vertical-align: middle;
+}
+
 table.dataTable.no-shadow {
 	box-shadow: none;
+}
+
+ul.table-products {
+	margin-bottom: 0 !important;
+}
+
+.table td, .table th {
+	border-top: 1px solid #dddddd !important;
+}
+
+.table td {
+    border-bottom: 1px solid #dddddd !important;
 }
 
 .table thead th {

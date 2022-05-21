@@ -256,11 +256,12 @@
                           </thead>
                           <tbody>
                             @foreach($recent_sale as $sale)
-                            <?php $customer = DB::table('customers')->find($sale->customer_id); ?>
+                            <?php //$customer = DB::table('customers')->find($sale->customer_id); ?>
                             <tr>
                               <td>{{ date($general_setting->date_format, strtotime($sale->created_at->toDateString())) }}</td>
                               <td>{{$sale->reference_no}}</td>
-                              <td>{{$customer->name}}</td>
+                              {{-- <td>{{$customer->name}}</td> --}}
+                              <td></td>
                               @if($sale->sale_status == 1)
                               <td><div class="badge badge-success">{{trans('file.Completed')}}</div></td>
                               @elseif($sale->sale_status == 2)

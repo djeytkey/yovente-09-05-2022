@@ -255,11 +255,12 @@
                           </thead>
                           <tbody>
                             <?php $__currentLoopData = $recent_sale; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sale): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php $customer = DB::table('customers')->find($sale->customer_id); ?>
+                            <?php //$customer = DB::table('customers')->find($sale->customer_id); ?>
                             <tr>
                               <td><?php echo e(date($general_setting->date_format, strtotime($sale->created_at->toDateString()))); ?></td>
                               <td><?php echo e($sale->reference_no); ?></td>
-                              <td><?php echo e($customer->name); ?></td>
+                              
+                              <td></td>
                               <?php if($sale->sale_status == 1): ?>
                               <td><div class="badge badge-success"><?php echo e(trans('file.Completed')); ?></div></td>
                               <?php elseif($sale->sale_status == 2): ?>

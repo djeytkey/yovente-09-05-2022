@@ -78,7 +78,7 @@
                     <th><?php echo e(trans('file.Date')); ?></th>
                     <th><?php echo e(trans('file.reference')); ?></th>
                     <th><?php echo e(trans('file.customer')); ?></th>
-                    <th><?php echo e(trans('file.Phone')); ?></th>
+                    <th><?php echo e(trans('file.Phone Number')); ?></th>
                     <th><?php echo e(trans('file.Products')); ?></th>
                     <th><?php echo e(trans('file.Status')); ?></th>
                     <th><?php echo e(trans('file.City')); ?></th>
@@ -761,8 +761,8 @@
             type:"post"
         },
         "createdRow": function( row, data, dataIndex ) {
-            // $(row).addClass('sale-link');
-            // $(row).attr('data-sale', data['sale']);
+            $(row).addClass('sale-link');
+            $(row).attr('data-sale', data['sale']);
         },
         "columns": [
             {"data": "key"},
@@ -790,7 +790,7 @@
         'columnDefs': [
             {
                 "orderable": false,
-                'targets': [0, 5, 8, 10],
+                'targets': [0, 5, 9, 10],
             },
             // {
             //     'targets': 3,
@@ -908,13 +908,9 @@
             var rows = dt_selector.rows( '.selected' ).indexes();
 
             $( dt_selector.column( 8 ).footer() ).html(dt_selector.cells( rows, 8, { page: 'current' } ).data().sum().toFixed(2));
-            $( dt_selector.column( 9 ).footer() ).html(dt_selector.cells( rows, 9, { page: 'current' } ).data().sum().toFixed(2));
-            $( dt_selector.column( 10 ).footer() ).html(dt_selector.cells( rows, 10, { page: 'current' } ).data().sum().toFixed(2));
         }
         else {
             $( dt_selector.column( 8 ).footer() ).html(dt_selector.cells( rows, 8, { page: 'current' } ).data().sum().toFixed(2));
-            $( dt_selector.column( 9 ).footer() ).html(dt_selector.cells( rows, 9, { page: 'current' } ).data().sum().toFixed(2));
-            $( dt_selector.column( 10 ).footer() ).html(dt_selector.cells( rows, 10, { page: 'current' } ).data().sum().toFixed(2));
         }
     }
 

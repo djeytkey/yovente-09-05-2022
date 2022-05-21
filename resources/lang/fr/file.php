@@ -111,7 +111,7 @@ return [
 	"User" => "Utilisateur",
 	"Email" => "Email",
 	"Company Name" => "Nom de la compagnie",
-	"Phone Number" => "Numéro de téléphone",
+	"Phone Number" => "Numéro téléphone",
 	"Role" => "Rôle",
 	"UserName" => "Nom d'utilisateur",
 	"Password" => "Mot de passe",
