@@ -1012,7 +1012,7 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
-<script type="text/javascript" src="https://js.stripe.com/v3/"></script>
+
 
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layout.main', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\laragon\www\yovente-09-05-2022\resources\views/sale/index.blade.php ENDPATH**/ ?>

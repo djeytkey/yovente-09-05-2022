@@ -1136,7 +1136,7 @@ $(document).on('submit', '.payment-form', function(e) {
 // $("ul#sale li").eq(2).addClass("active");
 </script>
 @endsection @section('scripts')
-<script type="text/javascript" src="https://js.stripe.com/v3/"></script>
+
 
 @endsection
 
