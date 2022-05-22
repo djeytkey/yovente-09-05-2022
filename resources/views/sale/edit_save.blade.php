@@ -16,13 +16,13 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>{{trans('file.reference')}}</label>
                                             <p><strong>{{ $lims_sale_data->reference_no }}</strong></p>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>{{trans('file.customer')}} *</label>
                                             <input type="hidden" name="customer_id_hidden" value="{{ $lims_sale_data->customer_id }}" />
@@ -33,9 +33,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>{{trans('file.Warehouse')}} *</label>
                                             <input type="hidden" name="warehouse_id_hidden" value="{{$lims_sale_data->warehouse_id}}" />
@@ -46,7 +44,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>{{trans('file.Biller')}} *</label>
                                             <input type="hidden" name="biller_id_hidden" value="{{$lims_sale_data->biller_id}}" />
@@ -194,7 +192,7 @@
                                                 <tfoot class="tfoot active">
                                                     <th colspan="2">{{trans('file.Total')}}</th>
                                                     <th id="total-qty">{{$lims_sale_data->total_qty}}</th>
-                                                    <th style="text-align: right;">{{trans('file.Delivery Rate')}}</th>
+                                                    <th style="text-align:right;">{{ trans('file.Delivery Rate') }}</th>
                                                     <th id="taux-livraison">{{ number_format((float)$lims_sale_data->livraison, 2, '.', '') }}</th>
                                                     <th id="total-discount">{{ number_format((float)$lims_sale_data->total_discount, 2, '.', '') }}</th>
                                                     <th id="total-tax">{{ number_format((float)$lims_sale_data->total_tax, 2, '.', '')}}</th>
@@ -249,10 +247,11 @@
                                         <div class="form-group">
                                             <input type="hidden" name="livraison" value="{{$lims_sale_data->livraison}}" />
                                             <input type="hidden" name="grand_total" value="{{$lims_sale_data->grand_total}}" />
+                                            <input type="hidden" name="sale_status" value="{{$lims_sale_data->sale_status}}" />
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row mt-3">
+                                <div class="row mt-3" style="display: none">
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <input type="hidden" name="order_tax_rate_hidden" value="{{$lims_sale_data->order_tax_rate}}">
@@ -296,6 +295,16 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
+                                            <label class="mt-2" style="color: red"><strong>{{trans('file.Confirmed')}} ?</strong></label>
+                                            @if($lims_sale_data->is_valide)
+                                            <input class="mt-2" type="checkbox" name="is_valide" id="is_valide" value="1" checked>
+                                            @else
+                                            <input class="mt-2" type="checkbox" name="is_valide" id="is_valide" value="1">
+                                            @endif
+                                        </div>
+                                    </div>
+                                    {{-- <div class="col-md-4">
+                                        <div class="form-group">
                                             <label>{{trans('file.Sale Status')}} *</label>
                                             <input type="hidden" name="sale_status_hidden" value="{{$lims_sale_data->sale_status}}" />
                                             <select name="sale_status" class="form-control">
@@ -303,7 +312,7 @@
                                                 <option value="2">{{trans('file.Pending')}}</option>
                                             </select>
                                         </div>
-                                    </div>
+                                    </div> --}}                                    
                                     @if($lims_sale_data->coupon_id)
                                     <div class="col-md-4">
                                         <div class="form-group">
@@ -377,17 +386,25 @@
                 </div>
                 <div class="modal-body">
                     <form>
-                        <div class="form-group">
-                            <label>{{trans('file.Quantity')}}</label>
-                            <input type="number" name="edit_qty" class="form-control" step="any">
-                        </div>
-                        <div class="form-group">
-                            <label>{{trans('file.Unit Discount')}}</label>
-                            <input type="number" name="edit_discount" class="form-control" step="any">
-                        </div>
-                        <div class="form-group">
-                            <label>{{trans('file.Unit Price')}}</label>
-                            <input type="number" name="edit_unit_price" class="form-control" step="any">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{trans('file.Unit Price')}}</label>
+                                    <input type="number" name="edit_unit_price" class="form-control" step="any">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{trans('file.Quantity')}}</label>
+                                    <input type="number" name="edit_qty" class="form-control" step="any">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{trans('file.Unit Discount')}}</label>
+                                    <input type="number" name="edit_discount" class="form-control" step="any">
+                                </div>
+                            </div>
                         </div>
                         <?php
                             $tax_name_all[] = 'No Tax';
@@ -397,20 +414,20 @@
                                 $tax_rate_all[] = $tax->rate;
                             }
                         ?>
-                            <div class="form-group">
-                                <label>{{trans('file.Tax Rate')}}</label>
-                                <select name="edit_tax_rate" class="form-control selectpicker">
-                                    @foreach($tax_name_all as $key => $name)
-                                    <option value="{{$key}}">{{$name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div id="edit_unit" class="form-group">
-                                <label>{{trans('file.Product Unit')}}</label>
-                                <select name="edit_unit" class="form-control selectpicker">
-                                </select>
-                            </div>
-                            <button type="button" name="update_btn" class="btn btn-primary">{{trans('file.update')}}</button>
+                        <div class="form-group d-none">
+                            <label>{{trans('file.Tax Rate')}}</label>
+                            <select name="edit_tax_rate" class="form-control selectpicker">
+                                @foreach($tax_name_all as $key => $name)
+                                <option value="{{$key}}">{{$name}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div id="edit_unit" class="form-group d-none">
+                            <label>{{trans('file.Product Unit')}}</label>
+                            <select name="edit_unit" class="form-control selectpicker">
+                            </select>
+                        </div>
+                        <button type="button" name="update_btn" class="btn btn-primary">{{trans('file.update')}}</button>
                     </form>
                 </div>
             </div>
@@ -509,6 +526,16 @@ for(rowindex  =0; rowindex <= rownumber; rowindex++){
     $('table.order-list tbody tr:nth-child(' + (rowindex + 1) + ')').find('.sale-unit').val(temp_unit_name[0]);
 }
 
+$("#is_valide").change( function() {
+  if ( $(this).is(":checked") ) {
+    $(this).val("1");
+    $(this).attr('checked','checked');
+  } else if ( $(this).not(":checked") ) {
+    $(this).val("0");
+    $(this).removeAttr('checked');
+  }
+});
+
 $('.selectpicker').selectpicker({
     style: 'btn-link',
 });
@@ -539,7 +566,7 @@ $.get('../getcustomergroup/' + id, function(data) {
     customer_group_rate = (data / 100);
 });
 
-var id = $('select[name="warehouse_id"]').val();
+var id = $('input[name="warehouse_id_hidden"]').val();
 $.get('../getproduct/' + id, function(data) {
     lims_product_array = [];
     product_code = data[0];
@@ -569,7 +596,7 @@ $.get('../getproduct/' + id, function(data) {
     });
 });
 
-isCashRegisterAvailable(id);
+//isCashRegisterAvailable(id);
 
 $('select[name="customer_id"]').on('change', function() {
     var id = $(this).val();
@@ -580,24 +607,32 @@ $('select[name="customer_id"]').on('change', function() {
 
 $('select[name="warehouse_id"]').on('change', function() {
     var id = $(this).val();
-    $.get('../getproduct/' + id, function(data) {
-        lims_product_array = [];
-        product_code = data[0];
-        product_name = data[1];
-        product_qty = data[2];
-        product_type = data[3];
-        product_id = data[4];
-        product_list = data[5];
-        qty_list = data[6];
-        product_warehouse_price = data[7];
-        batch_no = data[8];
-        product_batch_id = data[9];
+    $.ajax({
+        url: '../getproduct/' + id,
+        type: "GET",
+        success:function(data) {
+            lims_product_array = [];
+            product_code = data[0];
+            product_name = data[1];
+            product_qty = data[2];
+            product_type = data[3];
+            product_id = data[4];
+            product_list = data[5];
+            qty_list = data[6];
+            product_warehouse_price = data[7];
+            batch_no = data[8];
+            product_batch_id = data[9];
 
-        $.each(product_code, function(index) {
-            lims_product_array.push(product_code[index] + ' (' + product_name[index] + ')');
-        });
+            $.each(product_code, function(index) {
+                lims_product_array.push(product_code[index] + ' (' + product_name[index] + ')');
+            });
+        },
+        error:function(){
+            alert("No products in this warehouse");
+            document.location.reload(true);
+        }
     });
-    isCashRegisterAvailable(id);
+    //isCashRegisterAvailable(id);
 });
 
 var lims_productcodeSearch = $('#lims_productcodeSearch');
@@ -749,7 +784,7 @@ function productSearch(data){
         },
         success: function(data) {
             var flag = 1;
-            alert(data);
+            //alert(data);
             $(".product-code").each(function(i) {
                 if ($(this).val() == data[1]) {
                     rowindex = i;
@@ -1024,7 +1059,7 @@ function calculateTotal() {
     $(".sub-total").each(function() {
         total += parseFloat($(this).text());
     });
-    total = total + taux_livraison;
+    //total = total + taux_livraison;
     $("#total").text(total.toFixed(2));
     $('input[name="total_price"]').val(total.toFixed(2));
     $('input[name="livraison"]').val(taux_livraison.toFixed(2));

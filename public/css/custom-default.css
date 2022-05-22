@@ -1,3 +1,20 @@
+.no-mb {
+	margin-bottom: 0;
+}
+
+.no-mt {
+	margin-top: 0;
+}
+
+.row.no-mrl {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.mt-3 {
+    margin: auto;
+}
+
 nav.navbar a.menu-btn:hover {
     background: #7c5cc4;
 }

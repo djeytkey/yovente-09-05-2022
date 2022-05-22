@@ -35,10 +35,9 @@
     <link rel="stylesheet" href="<?php echo asset('public/vendor/daterange/css/daterangepicker.min.css'); ?>" type="text/css">
     <!-- table sorter stylesheet-->
     <link rel="stylesheet" type="text/css" href="<?php echo asset('public/vendor/datatable/dataTables.bootstrap4.min.css'); ?>">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/fixedheader/3.1.6/css/fixedHeader.bootstrap.min.css">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedheader/3.1.6/css/fixedHeader.bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.0/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="<?php echo asset('public/css/style.default.css'); ?>" id="theme-stylesheet" type="text/css">
     <link rel="stylesheet" href="<?php echo asset('public/css/dropzone.css'); ?>">
     <link rel="stylesheet" href="<?php echo asset('public/css/style.css'); ?>">

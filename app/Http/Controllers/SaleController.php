@@ -110,6 +110,21 @@ class SaleController extends Controller
         else
             $status_id = 2;
         
+        if(!empty($request->input('staring_date')))
+            $staring_date = $request->input('staring_date');
+        else
+            $staring_date = "";
+
+        if(!empty($request->input('ending_date')))
+            $ending_date = $request->input('ending_date');
+        else
+            $ending_date = "";
+
+        if(!empty($request->input('search_string')))
+            $search_string = $request->input('search_string');
+        else
+            $search_string = "";
+        
         if(Auth::user()->role_id > 2 && config('staff_access') == 'own' && $status_id != 2)
             $totalData = Sale::where([
                                         ['user_id', Auth::id()],
@@ -141,7 +156,8 @@ class SaleController extends Controller
         $start = $request->input('start');
         $order = 'sales.'.$columns[$request->input('order.0.column')];
         $dir = $request->input('order.0.dir');
-        if(empty($request->input('search.value'))) {
+        $condition = "vide";
+        if(empty($request->input('search_string'))) {
             if(Auth::user()->role_id > 2 && config('staff_access') == 'own' && $status_id != 2)
                 $sales = Sale::where([
                             ['user_id', Auth::id()],
@@ -179,134 +195,149 @@ class SaleController extends Controller
         }
         else
         {
-            $search = $request->input('search.value');
-            if(Auth::user()->role_id > 2 && config('staff_access') == 'own' && $status_id != 2) {
-                $sales =  Sale::select('sales.*')
-                            ->with('biller', 'customer', 'warehouse', 'user')
-                            ->join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where([
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['sales.reference_no', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['customers.name', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['billers.name', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->offset($start)
-                            ->limit($limit)
-                            ->orderBy($order,$dir)->get();
+            $search = $request->input('search_string');
+            if(Auth::user()->role_id > 2 && config('staff_access') == 'own' && $status_id != 2)
+            {
+                $condition = "Auth::user()->role_id > 2 && config('staff_access') == 'own' && status_id != 2";
+                $sales = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->offset($start)
+                        ->limit($limit)
+                        ->orderBy($order, $dir)
+                        ->get();
 
-                $totalFiltered = Sale::
-                            join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where([
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['sales.reference_no', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['customers.name', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['billers.name', 'LIKE', "%{$search}%"],
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->count();
+                $totalFiltered = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['is_valide', $status_id],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->count();
+            }                
+            elseif(Auth::user()->role_id > 2 && config('staff_access') == 'own')
+            {
+                $condition = "Auth::user()->role_id > 2 && config('staff_access') == 'own'";
+                $sales = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['user_id', Auth::id()],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->offset($start)
+                        ->limit($limit)
+                        ->orderBy($order, $dir)
+                        ->get();
+
+                $totalFiltered = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['user_id', Auth::id()],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['user_id', Auth::id()],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->count();
+            }                
+            elseif($status_id != 2)
+            {
+                $condition = "status_id != 2";
+                $sales = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['is_valide', $status_id],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['is_valide', $status_id],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['is_valide', $status_id],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->offset($start)
+                        ->limit($limit)
+                        ->orderBy($order, $dir)
+                        ->get();
+
+                $totalFiltered = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where([
+                            ['is_valide', $status_id],
+                            ['reference_no', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['is_valide', $status_id],
+                            ['customer_name', 'LIKE', "%{$search}%"]
+                        ])
+                        ->orwhere([
+                            ['is_valide', $status_id],
+                            ['customer_tel', 'LIKE', "%{$search}%"]
+                        ])
+                        ->count();
             }
-            elseif($status_id != 2) {
-                $sales =  Sale::select('sales.*')
-                            ->with('biller', 'customer', 'warehouse', 'user')
-                            ->join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where([
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['sales.reference_no', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['customers.name', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['billers.name', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->offset($start)
-                            ->limit($limit)
-                            ->orderBy($order,$dir)->get();
+            else
+            {
+                $condition = "else";
+                $sales = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where('reference_no', 'LIKE', "%{$search}%")
+                        ->orwhere('customer_name', 'LIKE', "%{$search}%")
+                        ->orwhere('customer_tel', 'LIKE', "%{$search}%")
+                        ->offset($start)
+                        ->limit($limit)
+                        ->orderBy($order, $dir)
+                        ->get();
 
-                $totalFiltered = Sale::
-                            join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where([
-                                ['sales.user_id', Auth::id()],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['sales.reference_no', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['customers.name', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->orwhere([
-                                ['billers.name', 'LIKE', "%{$search}%"],
-                                ['sales.is_valide', $status_id]
-                            ])
-                            ->count();
-            }
-            else {
-                $sales =  Sale::select('sales.*')
-                            ->with('biller', 'customer', 'warehouse', 'user')
-                            ->join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where('sales.user_id', Auth::id())
-                            ->orwhere('sales.reference_no', 'LIKE', "%{$search}%")
-                            ->orwhere('customers.name', 'LIKE', "%{$search}%")
-                            ->orwhere('billers.name', 'LIKE', "%{$search}%")
-                            ->offset($start)
-                            ->limit($limit)
-                            ->orderBy($order,$dir)->get();
-
-                $totalFiltered = Sale::
-                            join('customers', 'sales.customer_id', '=', 'customers.id')
-                            ->join('billers', 'sales.biller_id', '=', 'billers.id')
-                            ->whereDate('sales.created_at', '=' , date('Y-m-d', strtotime(str_replace('/', '-', $search))))
-                            ->where('sales.user_id', Auth::id())
-                            ->orwhere('sales.reference_no', 'LIKE', "%{$search}%")
-                            ->orwhere('customers.name', 'LIKE', "%{$search}%")
-                            ->orwhere('billers.name', 'LIKE', "%{$search}%")
-                            ->count();
+                $totalFiltered = Sale::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->where('reference_no', 'LIKE', "%{$search}%")
+                        ->orwhere('customer_name', 'LIKE', "%{$search}%")
+                        ->orwhere('customer_tel', 'LIKE', "%{$search}%")
+                        ->count();
             }
         }
+        
         $data = array();
         if(!empty($sales))
         {
@@ -324,6 +355,8 @@ class SaleController extends Controller
 
                 $lims_city_data = City::where('id', $sale->customer_city)->first();
                 $nestedData['city'] = $lims_city_data->name;
+				$sale_city = $lims_city_data->name;
+				$sale_delivery = "Delivery";
 
                 if($sale->is_valide == 1)
                 {
@@ -360,24 +393,6 @@ class SaleController extends Controller
                 } else {
                     $nestedData['products'] = "--";
                 }
-
-                // $lims_product_sale_data = Product_Sale::where('sale_id', $sale->id)->get();
-                // $lims_product_sale_data_count = Product_Sale::where('sale_id', $sale->id)->count();
-                // if(!empty($lims_product_sale_data))
-                // {
-                //     foreach ($lims_product_sale_data as $products_sale_data) {
-                //         $product_qty = $products_sale_data->qty;
-                //         /*$product = Product::where('id', $products_sale_data->product_id)->first();
-                //         $product_name = $product->name;
-                //         if($products_sale_data->variant_id) {
-                //             $variant_name = Variant::where('id', $products_sale_data->variant_id);
-                //         }*/
-                //         //$nestedData['products'] += $product_name . ' ( ' . $product_qty . ' ' . $variant_name . ' )<br>';
-                //         $nestedData['products'] += $product_qty .'<br>';
-                //     }
-                // } else {
-                //     $nestedData['products'] = "Products";
-                // }
 
                 if($sale->sale_status == 1){
                     $nestedData['sale_status'] = '<div class="badge badge-success">'.trans('file.Completed').'</div>';
@@ -463,181 +478,29 @@ class SaleController extends Controller
                 else
                     $coupon_code = null;
 
-                $nestedData['sale'] = "Tarik";
-
-                // $nestedData['sale'] = array( '[ 
-                //     "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
-                //     ' "'.$sale->reference_no.'"', //1
-                //     ' "'.$sale_status.'"', //2
-                //     ' "'.$sale->biller->name.'"', //3
-                //     ' "'.$sale->biller->company_name.'"', //4
-                //     ' "'.$sale->biller->email.'"', //5
-                //     ' "'.$sale->biller->phone_number.'"', //6
-                //     ' "'.$sale->biller->address.'"', //7
-                //     ' "'.$sale->biller->city.'"', //8
-                //     ' "'.$sale->customer->name.'"', //9
-                //     ' "'.$sale->customer->phone_number.'"', //10
-                //     ' "'.$sale->customer->address.'"', //11
-                //     ' "'.$sale->customer->city.'"', //12
-                //     ' "'.$sale->id.'"', //13
-                //     ' "'.$sale->total_tax.'"', //14
-                //     ' "'.$sale->total_discount.'"', //15
-                //     ' "'.$sale->total_price.'"', //16
-                //     ' "'.$sale->order_tax.'"', //17
-                //     ' "'.$sale->order_tax_rate.'"', //18
-                //     ' "'.$sale->order_discount.'"', //19
-                //     ' "'.$sale->shipping_cost.'"', //20
-                //     ' "'.$sale->grand_total.'"', //21
-                //     ' "'.$sale->paid_amount.'"', //22
-                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //23
-                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //24
-                //     ' "'.$sale->user->name.'"', //25
-                //     ' "'.$sale->user->email.'"', //26
-                //     ' "'.$sale->warehouse->name.'"', //27
-                //     ' "'.$coupon_code.'"', //28
-                //     ' "'.$sale->coupon_discount.'"', //29
-                //     ' "'.$sale->user_id.'"', //30
-                //     ' "'.$sale->is_valide.'"]' //31
-                // );
+                $nestedData['sale'] = array( '[ 
+                    "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
+                    ' "'.$sale->reference_no.'"', //1
+                    ' "'.$sale_status.'"', //2
+                    ' "'.$sale->customer_name.'"', //3
+                    ' "'.$sale->customer_tel.'"', //4
+                    ' "'.$sale->customer_address.'"', //5
+                    ' "'.$sale_city.'"', //6
+                    ' "'.$sale_delivery.'"', //7
+                    ' "'.$sale->user_id.'"', //8
+                    ' "'.$sale->is_valide.'"', //9
+                    ' "'.$sale->id.'"', //10
+                    ' "'.$sale->total_price.'"', //11
+                    ' "'.$sale->grand_total.'"', //12
+                    ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //13
+                    ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //14
+                    ' "'.$request->input('search_string').'"', //12
+                    ' "'.$request->input('starting_date').'"', //12
+                    ' "'.$request->input('ending_date').'"', //12
+                    ' "'.$status_id.'"', //12
+                    ' "'.$condition.'"]' //12
+                );
                 $data[] = $nestedData;
-
-
-
-                //$nestedData['id'] = $sale->id;
-                // $nestedData['key'] = $key;
-                // $nestedData['sold_by'] = $sale->user_id;
-                // $nestedData['date'] = date(config('date_format'), strtotime($sale->created_at->toDateString()));
-                // $nestedData['reference_no'] = $sale->reference_no;
-                // $nestedData['biller'] = $sale->biller->name;
-                // $nestedData['customer'] = $sale->customer->name;
-                // $nestedData['username'] = User::find($nestedData['sold_by'])->name;
-
-                // if($sale->sale_status == 1){
-                //     $nestedData['sale_status'] = '<div class="badge badge-success">'.trans('file.Completed').'</div>';
-                //     $sale_status = trans('file.Completed');
-                // }
-                // elseif($sale->sale_status == 2){
-                //     $nestedData['sale_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
-                //     $sale_status = trans('file.Pending');
-                // }
-                // else{
-                //     $nestedData['sale_status'] = '<div class="badge badge-warning">'.trans('file.Draft').'</div>';
-                //     $sale_status = trans('file.Draft');
-                // }
-
-                // if($sale->payment_status == 1)
-                //     $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
-                // elseif($sale->payment_status == 2)
-                //     $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Due').'</div>';
-                // elseif($sale->payment_status == 3)
-                //     $nestedData['payment_status'] = '<div class="badge badge-warning">'.trans('file.Partial').'</div>';
-                // else
-                //     $nestedData['payment_status'] = '<div class="badge badge-success">'.trans('file.Paid').'</div>';
-
-                // if($sale->is_valide == 1)
-                // {
-                //     $nestedData['valide_status'] = '<div class="badge badge-success">'.trans('file.Confirmed').'</div>';
-                //     $nestedData['valide_status_search'] = trans('file.Confirmed');
-                    
-                // } else {
-                //     $nestedData['valide_status'] = '<div class="badge badge-warning">'.trans('file.Not Confirmed').'</div>';
-                //     $nestedData['valide_status_search'] = trans('file.Not Confirmed');
-                // }
-
-                // $nestedData['grand_total'] = number_format($sale->grand_total, 2);
-                // $nestedData['paid_amount'] = number_format($sale->paid_amount, 2);
-                // $nestedData['due'] = number_format($sale->grand_total - $sale->paid_amount, 2);
-                // $nestedData['options'] = '<div class="btn-group">
-                //             <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'.trans("file.action").'
-                //               <span class="caret"></span>
-                //               <span class="sr-only">Toggle Dropdown</span>
-                //             </button>
-                //             <ul class="dropdown-menu edit-options dropdown-menu-right dropdown-default" user="menu">';
-                //             if(($sale->is_valide == 1 && $sale->payment_status == 4) || Auth::id() == 1) {
-                //                 $nestedData['options'] .= '<li>
-                //                 <a href="'.route('sale.invoice', $sale->id).'" class="btn btn-link">
-                //                 <i class="fa fa-copy"></i> '.trans('file.Generate Invoice').'</a>
-                //                 </li>';
-                //             }
-                //             $nestedData['options'] .= '<li>
-                //                     <button type="button" class="btn btn-link view"><i class="fa fa-eye"></i> '.trans('file.View').'</button>
-                //                 </li>';
-                // if(in_array("sales-edit", $request['all_permission'])){
-                //     if($sale->is_valide != 1)
-                //     {
-                //         $nestedData['options'] .= '<li>
-                //         <a href="'.route('sales.edit', $sale->id).'" class="btn btn-link"><i class="dripicons-document-edit"></i> '.trans('file.edit').'</a>
-                //         </li>'; 
-                //     } elseif(Auth::id() == 1)
-                //     {
-                //         $nestedData['options'] .= '<li>
-                //         <a href="'.route('sales.edit', $sale->id).'" class="btn btn-link"><i class="dripicons-document-edit"></i> '.trans('file.edit').'</a>
-                //         </li>';
-                //     }
-                // }
-                // if (Auth::id() == 1)
-                // {
-                //     $nestedData['options'] .= 
-                //     '<li>
-                //         <button type="button" class="add-payment btn btn-link" data-id = "'.$sale->id.'" data-toggle="modal" data-target="#add-payment"><i class="fa fa-plus"></i> '.trans('file.Add Payment').'</button>
-                //     </li>
-                //     <li>
-                //         <button type="button" class="get-payment btn btn-link" data-id = "'.$sale->id.'"><i class="fa fa-money"></i> '.trans('file.View Payment').'</button>
-                //     </li>
-                //     <li>
-                //         <button type="button" class="add-delivery btn btn-link" data-id = "'.$sale->id.'"><i class="fa fa-truck"></i> '.trans('file.Add Delivery').'</button>
-                //     </li>';
-                // }
-                
-                // if(in_array("sales-delete", $request['all_permission']))
-                //     $nestedData['options'] .= \Form::open(["route" => ["sales.destroy", $sale->id], "method" => "DELETE"] ).'
-                //             <li>
-                //               <button type="submit" class="btn btn-link" onclick="return confirmDelete()"><i class="dripicons-trash"></i> '.trans("file.delete").'</button> 
-                //             </li>'.\Form::close().'
-                //         </ul>
-                //     </div>';
-                // // data for sale details by one click
-                // $coupon = Coupon::find($sale->coupon_id);
-                // if($coupon)
-                //     $coupon_code = $coupon->code;
-                // else
-                //     $coupon_code = null;
-
-                // $nestedData['sale'] = array( '[ 
-                //     "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', //0
-                //     ' "'.$sale->reference_no.'"', //1
-                //     ' "'.$sale_status.'"', //2
-                //     ' "'.$sale->biller->name.'"', //3
-                //     ' "'.$sale->biller->company_name.'"', //4
-                //     ' "'.$sale->biller->email.'"', //5
-                //     ' "'.$sale->biller->phone_number.'"', //6
-                //     ' "'.$sale->biller->address.'"', //7
-                //     ' "'.$sale->biller->city.'"', //8
-                //     ' "'.$sale->customer->name.'"', //9
-                //     ' "'.$sale->customer->phone_number.'"', //10
-                //     ' "'.$sale->customer->address.'"', //11
-                //     ' "'.$sale->customer->city.'"', //12
-                //     ' "'.$sale->id.'"', //13
-                //     ' "'.$sale->total_tax.'"', //14
-                //     ' "'.$sale->total_discount.'"', //15
-                //     ' "'.$sale->total_price.'"', //16
-                //     ' "'.$sale->order_tax.'"', //17
-                //     ' "'.$sale->order_tax_rate.'"', //18
-                //     ' "'.$sale->order_discount.'"', //19
-                //     ' "'.$sale->shipping_cost.'"', //20
-                //     ' "'.$sale->grand_total.'"', //21
-                //     ' "'.$sale->paid_amount.'"', //22
-                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', //23
-                //     ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', //24
-                //     ' "'.$sale->user->name.'"', //25
-                //     ' "'.$sale->user->email.'"', //26
-                //     ' "'.$sale->warehouse->name.'"', //27
-                //     ' "'.$coupon_code.'"', //28
-                //     ' "'.$sale->coupon_discount.'"', //29
-                //     ' "'.$sale->user_id.'"', //30
-                //     ' "'.$sale->is_valide.'"]' //31
-                // );
-                // $data[] = $nestedData;
             }
         }
 

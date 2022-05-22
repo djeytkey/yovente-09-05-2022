@@ -14,8 +14,8 @@
             </div>
             <?php echo Form::open(['route' => 'sales.index', 'method' => 'get']); ?>
 
-            <div class="row mb-3">
-                <div class="col-md-4 offset-md-2 mt-3">
+            <div class="row no-mrl mb-3">
+                <div class="col-md-4 mt-3">
                     <div class="form-group row">
                         <label class="d-tc mt-2"><strong><?php echo e(trans('file.Choose Your Date')); ?></strong> &nbsp;</label>
                         <div class="d-tc">
@@ -27,20 +27,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mt-3 d-none">
+                <div class="col-md-3 mt-3">
                     <div class="form-group row">
-                        <label class="d-tc mt-2"><strong><?php echo e(trans('file.Choose Warehouse')); ?></strong> &nbsp;</label>
+                        <label class="d-tc mt-2"><strong><?php echo e(trans('file.Search')); ?></strong> &nbsp;</label>
                         <div class="d-tc">
-                            <select id="warehouse_id" name="warehouse_id" class="selectpicker form-control" data-live-search="true" >
-                                <option value="0"><?php echo e(trans('file.All Warehouse')); ?></option>
-                                <?php $__currentLoopData = $lims_warehouse_list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $warehouse): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <?php if($warehouse->id == $warehouse_id): ?>
-                                        <option selected value="<?php echo e($warehouse->id); ?>"><?php echo e($warehouse->name); ?></option>
-                                    <?php else: ?>
-                                        <option value="<?php echo e($warehouse->id); ?>"><?php echo e($warehouse->name); ?></option>
-                                    <?php endif; ?>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </select>
+                            <input type="text" name="search_string" id="search_string" class="form-control" placeholder="<?php echo e(trans('file.Type to search...')); ?>">
+                            <p class="no-mb">
+                                <small>(reference, customer, tel)</small>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -56,7 +50,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2 mt-3">
+                <div class="col-md-1 mt-3">
                     <div class="form-group">
                         <button class="btn btn-primary" id="filter-btn" type="submit"><?php echo e(trans('file.submit')); ?></button>
                     </div>
@@ -71,7 +65,7 @@
         <?php endif; ?>
     </div>
     <div class="table-responsive">
-        <table id="sale-table" class="table sale-list" style="width: 100%">
+        <table id="sale-table" class="table sale-list stripe" style="width: 100%">
             <thead>
                 <tr>
                     <th class="not-exported"></th>
@@ -101,9 +95,7 @@
                     <th></th>
                     <th></th>
                     <th></th>
-                </tr>
-                
-                
+                </tr>                
             </tfoot>
         </table>
     </div>
@@ -130,13 +122,9 @@
             <table class="table table-bordered product-sale-list">
                 <thead>
                     <th>#</th>
-                    <th><?php echo e(trans('file.product')); ?></th>
-                                        
+                    <th><?php echo e(trans('file.product')); ?></th>                 
                     <th><?php echo e(trans('file.Qty')); ?></th>
-                    <th><?php echo e(trans('file.Unit')); ?></th>
                     <th><?php echo e(trans('file.Unit Price')); ?></th>
-                    <th><?php echo e(trans('file.Tax')); ?></th>
-                    <th><?php echo e(trans('file.Discount')); ?></th>
                     <th><?php echo e(trans('file.Subtotal')); ?></th>
                 </thead>
                 <tbody>
@@ -452,6 +440,7 @@
 
     $(document).on("click", "tr.sale-link td:not(:first-child, :last-child)", function() {
         var sale = $(this).parent().data('sale');
+        alert(sale);
         saleDetails(sale);
     });
 
@@ -729,20 +718,18 @@
         });
     });
 
-    // $('select[name="is_valide"]').on("change", function() {  
-    //     alert("With name : " + $(this).val());
-    // });
-
     var queryString = window.location.search;
     var urlParams = new URLSearchParams(queryString);
     var status = urlParams.get('status_id');
     $('select[name=status_id]').val(status);
     $('.selectpicker').selectpicker('refresh');
+    var searchstring = urlParams.get('search_string');
+    $('input[name=search_string]').val(searchstring);
 
     var starting_date = $("input[name=starting_date]").val(); 
     var ending_date = $("input[name=ending_date]").val();
-    //var warehouse_id = $("#warehouse_id").val();
     var status_id = $("#status_id").val();
+    var search_string = $("#search_string").val();
 
     $('#sale-table').DataTable( {
         "processing": true,
@@ -754,8 +741,8 @@
                 all_permission: all_permission,
                 starting_date: starting_date,
                 ending_date: ending_date,
-                //warehouse_id: warehouse_id,
-                status_id: status_id
+                status_id: status_id,
+                search_string: search_string
             },
             dataType: "json",
             type:"post"
@@ -816,12 +803,14 @@
         dom: '<"row"lfB>rtip',
         buttons: [
             {
-                extend: 'pdf',
+                extend: 'pdfHtml5',
                 text: '<?php echo e(trans("file.PDF")); ?>',
                 exportOptions: {
                     columns: ':visible:Not(.not-exported)',
                     rows: ':visible'
                 },
+                orientation: 'landscape',
+                pageSize: 'LEGAL',
                 action: function(e, dt, button, config) {
                     datatable_sum(dt, true);
                     $.fn.dataTable.ext.buttons.pdfHtml5.action.call(this, e, dt, button, config);
@@ -850,6 +839,30 @@
                     columns: ':visible:Not(.not-exported)',
                     rows: ':visible'
                 },
+                customize: function(win)
+                {   
+                    var last = null;
+                    var current = null;
+                    var bod = [];
+    
+                    var css = '@page  { size: landscape; }',
+                        head = win.document.head || win.document.getElementsByTagName('head')[0],
+                        style = win.document.createElement('style');
+    
+                    style.type = 'text/css';
+                    style.media = 'print';
+    
+                    if (style.styleSheet)
+                    {
+                        style.styleSheet.cssText = css;
+                    }
+                    else
+                    {
+                        style.appendChild(win.document.createTextNode(css));
+                    }
+    
+                    head.appendChild(style);
+                },
                 action: function(e, dt, button, config) {
                     datatable_sum(dt, true);
                     $.fn.dataTable.ext.buttons.print.action.call(this, e, dt, button, config);
@@ -857,39 +870,39 @@
                 },
                 footer:true
             },
-            {
-                text: '<?php echo e(trans("file.delete")); ?>',
-                className: 'buttons-delete',
-                action: function ( e, dt, node, config ) {
-                    if(user_verified == '1') {
-                        sale_id.length = 0;
-                        $(':checkbox:checked').each(function(i){
-                            if(i){
-                                var sale = $(this).closest('tr').data('sale');
-                                sale_id[i-1] = sale[13];
-                            }
-                        });
-                        if(sale_id.length && confirm("Are you sure want to delete?")) {
-                            $.ajax({
-                                type:'POST',
-                                url:'sales/deletebyselection',
-                                data:{
-                                    saleIdArray: sale_id
-                                },
-                                success:function(data){
-                                    alert(data);
-                                    //dt.rows({ page: 'current', selected: true }).deselect();
-                                    dt.rows({ page: 'current', selected: true }).remove().draw(false);
-                                }
-                            });
-                        }
-                        else if(!sale_id.length)
-                            alert('Nothing is selected!');
-                    }
-                    else
-                        alert('This feature is disable for demo!');
-                }
-            },
+            // {
+            //     text: '<?php echo e(trans("file.delete")); ?>',
+            //     className: 'buttons-delete',
+            //     action: function ( e, dt, node, config ) {
+            //         if(user_verified == '1') {
+            //             sale_id.length = 0;
+            //             $(':checkbox:checked').each(function(i){
+            //                 if(i){
+            //                     var sale = $(this).closest('tr').data('sale');
+            //                     sale_id[i-1] = sale[13];
+            //                 }
+            //             });
+            //             if(sale_id.length && confirm("Are you sure want to delete?")) {
+            //                 $.ajax({
+            //                     type:'POST',
+            //                     url:'sales/deletebyselection',
+            //                     data:{
+            //                         saleIdArray: sale_id
+            //                     },
+            //                     success:function(data){
+            //                         alert(data);
+            //                         //dt.rows({ page: 'current', selected: true }).deselect();
+            //                         dt.rows({ page: 'current', selected: true }).remove().draw(false);
+            //                     }
+            //                 });
+            //             }
+            //             else if(!sale_id.length)
+            //                 alert('Nothing is selected!');
+            //         }
+            //         else
+            //             alert('This feature is disable for demo!');
+            //     }
+            // },
             {
                 extend: 'colvis',
                 text: '<?php echo e(trans("file.Column visibility")); ?>',
@@ -915,24 +928,18 @@
     }
 
     function saleDetails(sale){
-        //alert(sale);
-        $("#sale-details input[name='sale_id']").val(sale[13]);
-        if(sale[31] == 1)
+        if(sale[9] == 1) //is_valide
             var valide_status = '<div class="badge badge-success"><?php echo e(trans("file.Confirmed")); ?></div>';
         else
             var valide_status = '<div class="badge badge-warning"><?php echo e(trans("file.Not Confirmed")); ?></div>';
+        
+        var htmltext = '<div class="row"><div class="col-md-6"><table><tr><td><u><strong><?php echo e(trans("file.Date")); ?></strong></u></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td>'+sale[0]+'</tr><tr><td><u><strong><?php echo e(trans("file.reference")); ?></strong></u></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td>'+sale[1]+'</tr></table></div><div class="col-md-6"><table><tr><td><u><strong><?php echo e(trans("file.Status")); ?></strong></u></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td>'+valide_status+'</tr><tr><td><u><strong><?php echo e(trans("file.delivery")); ?></strong></u></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td>'+sale[7]+'</tr></table></div></div><br><br><div class="row"><div class="col-md-12"><u><strong><?php echo e(trans("file.customer")); ?></strong></u> : <br>'+sale[3]+'<br>'+sale[4]+'<br>'+sale[5]+'<br>'+sale[6]+'</div></div>';
 
-        var htmltext = '<strong><?php echo e(trans("file.Date")); ?>: </strong>'+sale[0]+'<br><strong><?php echo e(trans("file.reference")); ?>: </strong>'+sale[1]+'<br><strong><?php echo e(trans("file.Status")); ?>: </strong>'+valide_status+'<br><br><div class="row"><div class="col-md-6"><strong><?php echo e(trans("file.From")); ?>:</strong><br>'+sale[3]+'<br>'+sale[4]+'<br>'+sale[5]+'<br>'+sale[6]+'<br>'+sale[7]+'<br>'+sale[8]+'</div><div class="col-md-6"><div class="float-right"><strong><?php echo e(trans("file.To")); ?>:</strong><br>'+sale[9]+'<br>'+sale[10]+'<br>'+sale[11]+'<br>'+sale[12]+'</div></div></div>';
-        $.get('sales/product_sale/' + sale[13], function(data){
+        $.get('sales/product_sale/' + sale[10], function(data){
             $(".product-sale-list tbody").remove();
             var name_code = data[0];
             var qty = data[1];
-            var unit_code = data[2];
-            var tax = data[3];
-            var tax_rate = data[4];
-            var discount = data[5];
             var subtotal = data[6];
-            //var batch_no = data[7];
             var livraison = data[8];
             var newBody = $("<tbody>");
             $.each(name_code, function(index){
@@ -940,12 +947,8 @@
                 var cols = '';
                 cols += '<td><strong>' + (index+1) + '</strong></td>';
                 cols += '<td>' + name_code[index] + '</td>';
-                //cols += '<td>' + batch_no[index] + '</td>';
                 cols += '<td>' + qty[index] + '</td>';
-                cols += '<td>' + unit_code[index] + '</td>';
                 cols += '<td>' + parseFloat(subtotal[index] / qty[index]).toFixed(2) + '</td>';
-                cols += '<td>' + tax[index] + '(' + tax_rate[index] + '%)' + '</td>';
-                cols += '<td>' + parseFloat(discount[index]).toFixed(2) + '</td>';
                 cols += '<td>' + parseFloat(subtotal[index]).toFixed(2) + '</td>';
                 newRow.append(cols);
                 newBody.append(newRow);
@@ -953,78 +956,15 @@
 
             var newRow = $("<tr>");
             cols = '';
-            cols += '<td colspan=7><strong><?php echo e(trans("file.Delivery Rate")); ?>:</strong></td>';
-            cols += '<td>' + parseFloat(livraison).toFixed(2) + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-
-            var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=5><strong><?php echo e(trans("file.Total")); ?>:</strong></td>';
-            cols += '<td>' + parseFloat(sale[14]).toFixed(2) + '</td>';
-            cols += '<td>' + parseFloat(sale[15]).toFixed(2) + '</td>';
-            cols += '<td>' + parseFloat(sale[16]).toFixed(2) + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-
-            /*var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=8><strong><?php echo e(trans("file.Order Tax")); ?>:</strong></td>';
-            cols += '<td>' + sale[17] + '(' + sale[18] + '%)' + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-
-            var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=8><strong><?php echo e(trans("file.Order Discount")); ?>:</strong></td>';
-            cols += '<td>' + sale[19] + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-            if(sale[28]) {
-                var newRow = $("<tr>");
-                cols = '';
-                cols += '<td colspan=8><strong><?php echo e(trans("file.Coupon Discount")); ?> ['+sale[28]+']:</strong></td>';
-                cols += '<td>' + sale[29] + '</td>';
-                newRow.append(cols);
-                newBody.append(newRow);
-            }
-
-            var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=8><strong><?php echo e(trans("file.Shipping Cost")); ?>:</strong></td>';
-            cols += '<td>' + sale[20] + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);*/
-
-            var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=7><strong><?php echo e(trans("file.grand total")); ?>:</strong></td>';
-            cols += '<td>' + parseFloat(sale[21]).toFixed(2) + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-
-            var newRow = $("<tr>");
-            cols = '';
-            paidamount = '-';
-            cols += '<td colspan=7><strong><?php echo e(trans("file.Paid Amount")); ?>:</strong></td>';
-            if (sale[22] !== "") {
-                paidamount = parseFloat(sale[22]).toFixed(2);
-            }
-            cols += '<td>' + paidamount + '</td>';
-            newRow.append(cols);
-            newBody.append(newRow);
-
-            var newRow = $("<tr>");
-            cols = '';
-            cols += '<td colspan=7><strong><?php echo e(trans("file.Due")); ?>:</strong></td>';
-            cols += '<td>' + parseFloat(sale[21] - sale[22]).toFixed(2) + '</td>';
+            cols += '<td colspan=4><strong><?php echo e(trans("file.grand total")); ?>:</strong></td>';
+            cols += '<td>' + parseFloat(sale[12]).toFixed(2) + '</td>';
             newRow.append(cols);
             newBody.append(newRow);
 
             $("table.product-sale-list").append(newBody);
         });
-        //var htmlfooter = '<p><strong><?php echo e(trans("file.Sale Note")); ?>:</strong> '+sale[23]+'</p><p><strong><?php echo e(trans("file.Staff Note")); ?>:</strong> '+sale[24]+'</p><strong><?php echo e(trans("file.Created By")); ?>:</strong><br>'+sale[25]+'<br>'+sale[26];
-        var htmlfooter = '<div class="row"><div class="col-md-4"><strong><?php echo e(trans("file.Sale Note")); ?>:</strong></div><div class="col-md-4"><strong><?php echo e(trans("file.Staff Note")); ?>:</strong></div><div class="col-md-4"><strong><?php echo e(trans("file.Created By")); ?>:</strong></div></div><div class="row"><div class="col-md-4">'+sale[23]+'</div><div class="col-md-4">'+sale[24]+'</div><div class="col-md-4">'+sale[25]+'<br>'+sale[26]+'</div></div>';
+
+        var htmlfooter = '<div class="row"><div class="col-md-6"><u><strong><?php echo e(trans("file.Sale Note")); ?>:</strong></u></div><div class="col-md-6"><u><strong><?php echo e(trans("file.Staff Note")); ?>:</strong></u></div></div><div class="row"><div class="col-md-6">'+sale[13]+'</div><div class="col-md-6">'+sale[14]+'</div></div>';
         $('#sale-content').html(htmltext);
         $('#sale-footer').html(htmlfooter);
         $('#sale-details').modal('show');
