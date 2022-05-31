@@ -69,16 +69,18 @@ class PurchaseController extends Controller
             6 => 'paid_amount',
         );
         
-        $warehouse_id = $request->input('warehouse_id');
+        //$warehouse_id = $request->input('warehouse_id');
         if(Auth::user()->role_id > 2 && config('staff_access') == 'own')
             $totalData = Purchase::where('user_id', Auth::id())
                         ->whereDate('created_at', '>=' ,$request->input('starting_date'))
                         ->whereDate('created_at', '<=' ,$request->input('ending_date'))
                         ->count();
-        elseif($warehouse_id != 0)
-            $totalData = Purchase::where('warehouse_id', $warehouse_id)->whereDate('created_at', '>=' ,$request->input('starting_date'))->whereDate('created_at', '<=' ,$request->input('ending_date'))->count();
+        // elseif($warehouse_id != 0)
+        //     $totalData = Purchase::where('warehouse_id', $warehouse_id)->whereDate('created_at', '>=' ,$request->input('starting_date'))->whereDate('created_at', '<=' ,$request->input('ending_date'))->count();
         else
-            $totalData = Purchase::whereDate('created_at', '>=' ,$request->input('starting_date'))->whereDate('created_at', '<=' ,$request->input('ending_date'))->count();
+            $totalData = Purchase::whereDate('created_at', '>=' ,$request->input('starting_date'))
+                        ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                        ->count();
 
         $totalFiltered = $totalData;
 
@@ -91,25 +93,25 @@ class PurchaseController extends Controller
         $dir = $request->input('order.0.dir');
         if(empty($request->input('search.value'))) {
             if(Auth::user()->role_id > 2 && config('staff_access') == 'own')
-                $purchases = Purchase::with('supplier', 'warehouse')->offset($start)
-                            ->where('user_id', Auth::id())
+                $purchases = Purchase::where('user_id', Auth::id())
                             ->whereDate('created_at', '>=' ,$request->input('starting_date'))
                             ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                            ->offset($start)
                             ->limit($limit)
                             ->orderBy($order, $dir)
                             ->get();
-            elseif($warehouse_id != 0)
-                $purchases = Purchase::with('supplier', 'warehouse')->offset($start)
-                            ->where('warehouse_id', $warehouse_id)
-                            ->whereDate('created_at', '>=' ,$request->input('starting_date'))
-                            ->whereDate('created_at', '<=' ,$request->input('ending_date'))
-                            ->limit($limit)
-                            ->orderBy($order, $dir)
-                            ->get();
+            // elseif($warehouse_id != 0)
+            //     $purchases = Purchase::with('supplier', 'warehouse')->offset($start)
+            //                 ->where('warehouse_id', $warehouse_id)
+            //                 ->whereDate('created_at', '>=' ,$request->input('starting_date'))
+            //                 ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+            //                 ->limit($limit)
+            //                 ->orderBy($order, $dir)
+            //                 ->get();
             else
-                $purchases = Purchase::with('supplier', 'warehouse')->offset($start)
-                            ->whereDate('created_at', '>=' ,$request->input('starting_date'))
+                $purchases = Purchase::whereDate('created_at', '>=' ,$request->input('starting_date'))
                             ->whereDate('created_at', '<=' ,$request->input('ending_date'))
+                            ->offset($start)
                             ->limit($limit)
                             ->orderBy($order, $dir)
                             ->get();
@@ -242,7 +244,32 @@ class PurchaseController extends Controller
                 // data for purchase details by one click
                 $user = User::find($purchase->user_id);
 
-                $nestedData['purchase'] = array( '[ "'.date(config('date_format'), strtotime($purchase->created_at->toDateString())).'"', ' "'.$purchase->reference_no.'"', ' "'.$purchase_status.'"',  ' "'.$purchase->id.'"', ' "'.$purchase->warehouse->name.'"', ' "'.$purchase->warehouse->phone.'"', ' "'.$purchase->warehouse->address.'"', ' "'.$supplier->name.'"', ' "'.$supplier->company_name.'"', ' "'.$supplier->email.'"', ' "'.$supplier->phone_number.'"', ' "'.$supplier->address.'"', ' "'.$supplier->city.'"', ' "'.$purchase->total_tax.'"', ' "'.$purchase->total_discount.'"', ' "'.$purchase->total_cost.'"', ' "'.$purchase->order_tax.'"', ' "'.$purchase->order_tax_rate.'"', ' "'.$purchase->order_discount.'"', ' "'.$purchase->shipping_cost.'"', ' "'.$purchase->grand_total.'"', ' "'.$purchase->paid_amount.'"', ' "'.preg_replace('/\s+/S', " ", $purchase->note).'"', ' "'.$user->name.'"', ' "'.$user->email.'"]'
+                $nestedData['purchase'] = array( 
+                    '["'.date(config('date_format'),strtotime($purchase->created_at->toDateString())).'"',
+                    ' "'.$purchase->reference_no.'"', 
+                    ' "'.$purchase_status.'"',  
+                    ' "'.$purchase->id.'"', 
+                    // ' "'.$purchase->warehouse->name.'"', 
+                    // ' "'.$purchase->warehouse->phone.'"', 
+                    // ' "'.$purchase->warehouse->address.'"', 
+                    ' "'.$supplier->name.'"', 
+                    ' "'.$supplier->company_name.'"', 
+                    ' "'.$supplier->email.'"', 
+                    ' "'.$supplier->phone_number.'"', 
+                    ' "'.$supplier->address.'"', 
+                    ' "'.$supplier->city.'"', 
+                    ' "'.$purchase->total_tax.'"', 
+                    ' "'.$purchase->total_discount.'"', 
+                    ' "'.$purchase->total_cost.'"', 
+                    ' "'.$purchase->order_tax.'"', 
+                    ' "'.$purchase->order_tax_rate.'"', 
+                    ' "'.$purchase->order_discount.'"', 
+                    ' "'.$purchase->shipping_cost.'"', 
+                    ' "'.$purchase->grand_total.'"', 
+                    ' "'.$purchase->paid_amount.'"', 
+                    ' "'.preg_replace('/\s+/S', " ", $purchase->note).'"', 
+                    ' "'.$user->name.'"', 
+                    ' "'.$user->email.'"]'
                 );
                 $data[] = $nestedData;
             }
@@ -350,10 +377,10 @@ class PurchaseController extends Controller
 
     public function store(Request $request)
     {
+        //dd($request);
         $data = $request->except('document');
-        //return dd($data);
         $data['user_id'] = Auth::id();
-        $data['reference_no'] = 'pr-' . date("Ymd") . '-'. date("his");
+        $data['reference_no'] = 'pr-' . strtolower(Auth::user()->name) . '-' . date("dmy") . '-'. date("His");
         $document = $request->document;
         if ($document) {
             $v = Validator::make(
@@ -379,8 +406,8 @@ class PurchaseController extends Controller
         $product_code = $data['product_code'];
         $qty = $data['qty'];
         $recieved = $data['recieved'];
-        $batch_no = $data['batch_no'];
-        $expired_date = $data['expired_date'];
+        // $batch_no = $data['batch_no'];
+        // $expired_date = $data['expired_date'];
         $purchase_unit = $data['purchase_unit'];
         $net_unit_cost = $data['net_unit_cost'];
         $discount = $data['discount'];
@@ -400,75 +427,75 @@ class PurchaseController extends Controller
             $lims_product_data = Product::find($id);
 
             //dealing with product barch
-            if($batch_no[$i]) {
-                $product_batch_data = ProductBatch::where([
-                                        ['product_id', $lims_product_data->id],
-                                        ['batch_no', $batch_no[$i]]
-                                    ])->first();
-                if($product_batch_data) {
-                    $product_batch_data->expired_date = $expired_date[$i];
-                    $product_batch_data->qty += $quantity;
-                    $product_batch_data->save();
-                }
-                else {
-                    $product_batch_data = ProductBatch::create([
-                                            'product_id' => $lims_product_data->id,
-                                            'batch_no' => $batch_no[$i],
-                                            'expired_date' => $expired_date[$i],
-                                            'qty' => $quantity
-                                        ]);   
-                }
-                $product_purchase['product_batch_id'] = $product_batch_data->id;
-            }
-            else
-                $product_purchase['product_batch_id'] = null;
+            // if($batch_no[$i]) {
+            //     $product_batch_data = ProductBatch::where([
+            //                             ['product_id', $lims_product_data->id],
+            //                             ['batch_no', $batch_no[$i]]
+            //                         ])->first();
+            //     if($product_batch_data) {
+            //         $product_batch_data->expired_date = $expired_date[$i];
+            //         $product_batch_data->qty += $quantity;
+            //         $product_batch_data->save();
+            //     }
+            //     else {
+            //         $product_batch_data = ProductBatch::create([
+            //                                 'product_id' => $lims_product_data->id,
+            //                                 'batch_no' => $batch_no[$i],
+            //                                 'expired_date' => $expired_date[$i],
+            //                                 'qty' => $quantity
+            //                             ]);   
+            //     }
+            //     $product_purchase['product_batch_id'] = $product_batch_data->id;
+            // }
+            // else
+            //     $product_purchase['product_batch_id'] = null;
 
             if($lims_product_data->is_variant) {
                 $lims_product_variant_data = ProductVariant::select('id', 'variant_id', 'qty')->FindExactProductWithCode($lims_product_data->id, $product_code[$i])->first();
-                $lims_product_warehouse_data = Product_Warehouse::where([
-                    ['product_id', $id],
-                    ['variant_id', $lims_product_variant_data->variant_id],
-                    ['warehouse_id', $data['warehouse_id']]
-                ])->first();
+                // $lims_product_warehouse_data = Product_Warehouse::where([
+                //     ['product_id', $id],
+                //     ['variant_id', $lims_product_variant_data->variant_id],
+                //     ['warehouse_id', $data['warehouse_id']]
+                // ])->first();
                 $product_purchase['variant_id'] = $lims_product_variant_data->variant_id;
                 //add quantity to product variant table
                 $lims_product_variant_data->qty += $quantity;
                 $lims_product_variant_data->save();
             }
             else {
-                $product_purchase['variant_id'] = null;
-                if($product_purchase['product_batch_id']) {
-                    $lims_product_warehouse_data = Product_Warehouse::where([
-                        ['product_id', $id],
-                        ['product_batch_id', $product_purchase['product_batch_id'] ],
-                        ['warehouse_id', $data['warehouse_id'] ],
-                    ])->first();
-                }
-                else {
-                    $lims_product_warehouse_data = Product_Warehouse::where([
-                        ['product_id', $id],
-                        ['warehouse_id', $data['warehouse_id'] ],
-                    ])->first();
-                }
+                // $product_purchase['variant_id'] = null;
+                // if($product_purchase['product_batch_id']) {
+                //     $lims_product_warehouse_data = Product_Warehouse::where([
+                //         ['product_id', $id],
+                //         ['product_batch_id', $product_purchase['product_batch_id'] ],
+                //         ['warehouse_id', $data['warehouse_id'] ],
+                //     ])->first();
+                // }
+                // else {
+                //     $lims_product_warehouse_data = Product_Warehouse::where([
+                //         ['product_id', $id],
+                //         ['warehouse_id', $data['warehouse_id'] ],
+                //     ])->first();
+                // }
             }
             //add quantity to product table
             $lims_product_data->qty = $lims_product_data->qty + $quantity;
             $lims_product_data->save();
             //add quantity to warehouse
-            if ($lims_product_warehouse_data) {
-                $lims_product_warehouse_data->qty = $lims_product_warehouse_data->qty + $quantity;
-            } 
-            else {
-                $lims_product_warehouse_data = new Product_Warehouse();
-                $lims_product_warehouse_data->product_id = $id;
-                $lims_product_warehouse_data->product_batch_id = $product_purchase['product_batch_id'];
-                $lims_product_warehouse_data->warehouse_id = $data['warehouse_id'];
-                $lims_product_warehouse_data->qty = $quantity;
-                if($lims_product_data->is_variant)
-                    $lims_product_warehouse_data->variant_id = $lims_product_variant_data->variant_id;
-            }
+            // if ($lims_product_warehouse_data) {
+            //     $lims_product_warehouse_data->qty = $lims_product_warehouse_data->qty + $quantity;
+            // } 
+            // else {
+            //     $lims_product_warehouse_data = new Product_Warehouse();
+            //     $lims_product_warehouse_data->product_id = $id;
+            //     $lims_product_warehouse_data->product_batch_id = $product_purchase['product_batch_id'];
+            //     $lims_product_warehouse_data->warehouse_id = $data['warehouse_id'];
+            //     $lims_product_warehouse_data->qty = $quantity;
+            //     if($lims_product_data->is_variant)
+            //         $lims_product_warehouse_data->variant_id = $lims_product_variant_data->variant_id;
+            // }
 
-            $lims_product_warehouse_data->save();
+            // $lims_product_warehouse_data->save();
 
             $product_purchase['purchase_id'] = $lims_purchase_data->id ;
             $product_purchase['product_id'] = $id;

@@ -26,7 +26,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mt-3 @if(\Auth::user()->role_id > 2){{'d-none'}}@endif">
+                <div class="col-md-4 mt-3 d-none">
                     <div class="form-group row">
                         <label class="d-tc mt-2"><strong>{{trans('file.Choose Warehouse')}}</strong> &nbsp;</label>
                         <div class="d-tc">
@@ -536,17 +536,18 @@
     function dataTable() {
         var starting_date = $("input[name=starting_date]").val(); 
         var ending_date = $("input[name=ending_date]").val();
-        var warehouse_id = $("#warehouse_id").val();
+        //var warehouse_id = $("#warehouse_id").val();
         $('#purchase-table').DataTable( {
             "processing": true,
             "serverSide": true,
+            "searching": false,
             "ajax":{
                 url:"purchases/purchase-data",
                 data:{
                     all_permission: all_permission,
                     starting_date: starting_date,
                     ending_date: ending_date,
-                    warehouse_id: warehouse_id
+                    //warehouse_id: warehouse_id
                 },
                 dataType: "json",
                 type:"post",
@@ -647,39 +648,39 @@
                     },
                     footer:true
                 },
-                {
-                    text: '{{trans("file.delete")}}',
-                    className: 'buttons-delete',
-                    action: function ( e, dt, node, config ) {
-                        if(user_verified == '1') {
-                            purchase_id.length = 0;
-                            $(':checkbox:checked').each(function(i){
-                                if(i){
-                                    var purchase = $(this).closest('tr').data('purchase');
-                                    purchase_id[i-1] = purchase[3];
-                                }
-                            });
-                            if(purchase_id.length && confirm("Are you sure want to delete?")) {
-                                $.ajax({
-                                    type:'POST',
-                                    url:'purchases/deletebyselection',
-                                    data:{
-                                        purchaseIdArray: purchase_id
-                                    },
-                                    success:function(data) {
-                                        alert(data);
-                                        //dt.rows({ page: 'current', selected: true }).deselect();
-                                        dt.rows({ page: 'current', selected: true }).remove().draw(false);
-                                    }
-                                });
-                            }
-                            else if(!purchase_id.length)
-                                alert('Nothing is selected!');
-                        }
-                        else
-                            alert('This feature is disable for demo!');
-                    }
-                },
+                // {
+                //     text: '{{trans("file.delete")}}',
+                //     className: 'buttons-delete',
+                //     action: function ( e, dt, node, config ) {
+                //         if(user_verified == '1') {
+                //             purchase_id.length = 0;
+                //             $(':checkbox:checked').each(function(i){
+                //                 if(i){
+                //                     var purchase = $(this).closest('tr').data('purchase');
+                //                     purchase_id[i-1] = purchase[3];
+                //                 }
+                //             });
+                //             if(purchase_id.length && confirm("Are you sure want to delete?")) {
+                //                 $.ajax({
+                //                     type:'POST',
+                //                     url:'purchases/deletebyselection',
+                //                     data:{
+                //                         purchaseIdArray: purchase_id
+                //                     },
+                //                     success:function(data) {
+                //                         alert(data);
+                //                         //dt.rows({ page: 'current', selected: true }).deselect();
+                //                         dt.rows({ page: 'current', selected: true }).remove().draw(false);
+                //                     }
+                //                 });
+                //             }
+                //             else if(!purchase_id.length)
+                //                 alert('Nothing is selected!');
+                //         }
+                //         else
+                //             alert('This feature is disable for demo!');
+                //     }
+                // },
                 {
                     extend: 'colvis',
                     text: '{{trans("file.Column visibility")}}',

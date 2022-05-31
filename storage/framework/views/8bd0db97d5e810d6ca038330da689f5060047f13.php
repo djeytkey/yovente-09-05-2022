@@ -792,6 +792,7 @@ function productSearch(data) {
                 cols += '<td><button type="button" class="ibtnDel btn btn-md btn-danger"><?php echo e(trans("file.delete")); ?></button></td>';
                 cols += '<input type="hidden" class="product-code" name="product_code[]" value="' + data[1] + '"/>';
                 cols += '<input type="hidden" class="product-id" name="product_id[]" value="' + data[9] + '"/>';
+                cols += '<input type="hidden" name="product_variant_id[]" value="' + data[10] + '"/>';
                 cols += '<input type="hidden" class="sale-unit" name="sale_unit[]" value="' + temp_unit_name[0] + '"/>';
                 cols += '<input type="hidden" class="net_unit_price" name="net_unit_price[]" />';
                 cols += '<input type="hidden" class="original_price" name="original_price[]" value="' + data[2] + '"/>';
