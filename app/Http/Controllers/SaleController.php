@@ -545,7 +545,7 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-        dd($request);
+        //dd($request);
         $data = $request->all();
         if(isset($request->reference_no)) {
             $this->validate($request, [
@@ -678,7 +678,7 @@ class SaleController extends Controller
                     if($lims_product_data->is_variant) {
                         $lims_product_variant_data->qty -= $quantity;
                         $lims_product_variant_data->save();
-                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id)->first();
+                        // $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id)->first();
                         //$lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($id, $lims_product_variant_data->variant_id, $data['warehouse_id'])->first();
                     }
                     /*elseif($product_batch_id[$i]) {
@@ -692,12 +692,12 @@ class SaleController extends Controller
                         $lims_product_batch_data->qty -= $quantity;
                         $lims_product_batch_data->save();
                     }*/
-                    else {
-                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($id, $data['warehouse_id'])->first();
-                    }
+                    // else {
+                    //     $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($id, $data['warehouse_id'])->first();
+                    // }
                     //deduct quantity from warehouse
-                    $lims_product_warehouse_data->qty -= $quantity;
-                    $lims_product_warehouse_data->save();
+                    // $lims_product_warehouse_data->qty -= $quantity;
+                    // $lims_product_warehouse_data->save();
                 }
             }
             else
@@ -763,8 +763,8 @@ class SaleController extends Controller
 
             $lims_payment_data = new Payment();
             $lims_payment_data->user_id = Auth::id();
-            if($cash_register_data)
-                $lims_payment_data->cash_register_id = $cash_register_data->id;
+            // if($cash_register_data)
+            //     $lims_payment_data->cash_register_id = $cash_register_data->id;
             $lims_account_data = Account::where('is_default', true)->first();
             $lims_payment_data->account_id = $lims_account_data->id;
             $lims_payment_data->sale_id = $lims_sale_data->id;
@@ -1040,42 +1040,24 @@ class SaleController extends Controller
 
     public function getProduct($id)
     {
-        $lims_product_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
-        ->where([
-            ['products.is_active', true],
-            //['product_warehouse.warehouse_id', $id],
-            ['product_warehouse.qty', '>', 0]
-        ])
-        ->whereNull('product_warehouse.variant_id')
-        ->whereNull('product_warehouse.product_batch_id')
-        ->select('product_warehouse.*')
-        ->get();
+        $lims_product_warehouse_data = Product::where([
+                                                            ['is_active', true],
+                                                            ['qty', '>', 0],
+                                                            ['is_variant', false]
+                                                        ])->get();
 
         config()->set('database.connections.mysql.strict', false);
         \DB::reconnect(); //important as the existing connection if any would be in strict mode
-
-        $lims_product_with_batch_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
-        ->where([
-            ['products.is_active', true],
-            //['product_warehouse.warehouse_id', $id],
-            ['product_warehouse.qty', '>', 0]
-        ])
-        ->whereNull('product_warehouse.variant_id')
-        ->whereNotNull('product_warehouse.product_batch_id')
-        ->select('product_warehouse.*')
-        ->groupBy('product_warehouse.product_id')
-        ->get();
 
         //now changing back the strict ON
         config()->set('database.connections.mysql.strict', true);
         \DB::reconnect();
 
-        $lims_product_with_variant_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
+        $lims_product_with_variant_warehouse_data = Product::join('product_variants', 'products.id', '=', 'product_variants.product_id')
         ->where([
             ['products.is_active', true],
-            //['product_warehouse.warehouse_id', $id],
-            ['product_warehouse.qty', '>', 0]
-        ])->whereNotNull('product_warehouse.variant_id')->select('product_warehouse.*')->get();
+            ['product_variants.qty', '>', 0]
+        ])->whereNotNull('product_variants.variant_id')->select('product_variants.*')->get();
         
         $product_code = [];
         $product_name = [];
@@ -1097,23 +1079,6 @@ class SaleController extends Controller
             $qty_list[] = $lims_product_data->qty_list;
             $batch_no[] = null;
             $product_batch_id[] = null;
-        }
-        
-        //product with batches
-        foreach ($lims_product_with_batch_warehouse_data as $product_warehouse) 
-        {
-            $product_qty[] = $product_warehouse->qty;
-            $product_price[] = $product_warehouse->price;
-            $lims_product_data = Product::find($product_warehouse->product_id);
-            $product_code[] =  $lims_product_data->code;
-            $product_name[] = htmlspecialchars($lims_product_data->name);
-            $product_type[] = $lims_product_data->type;
-            $product_id[] = $lims_product_data->id;
-            $product_list[] = $lims_product_data->product_list;
-            $qty_list[] = $lims_product_data->qty_list;
-            $product_batch_data = ProductBatch::select('id', 'batch_no')->find($product_warehouse->product_batch_id);
-            $batch_no[] = $product_batch_data->batch_no;
-            $product_batch_id[] = $product_batch_data->id;
         }
         
         //product with variant
@@ -1149,6 +1114,118 @@ class SaleController extends Controller
         $product_data = [$product_code, $product_name, $product_qty, $product_type, $product_id, $product_list, $qty_list, $product_price, $batch_no, $product_batch_id];
         return $product_data;
     }
+
+    // public function getProduct($id)
+    // {
+    //     $lims_product_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
+    //     ->where([
+    //         ['products.is_active', true],
+    //         //['product_warehouse.warehouse_id', $id],
+    //         ['product_warehouse.qty', '>', 0]
+    //     ])
+    //     ->whereNull('product_warehouse.variant_id')
+    //     ->whereNull('product_warehouse.product_batch_id')
+    //     ->select('product_warehouse.*')
+    //     ->get();
+
+    //     config()->set('database.connections.mysql.strict', false);
+    //     \DB::reconnect(); //important as the existing connection if any would be in strict mode
+
+    //     $lims_product_with_batch_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
+    //     ->where([
+    //         ['products.is_active', true],
+    //         //['product_warehouse.warehouse_id', $id],
+    //         ['product_warehouse.qty', '>', 0]
+    //     ])
+    //     ->whereNull('product_warehouse.variant_id')
+    //     ->whereNotNull('product_warehouse.product_batch_id')
+    //     ->select('product_warehouse.*')
+    //     ->groupBy('product_warehouse.product_id')
+    //     ->get();
+
+    //     //now changing back the strict ON
+    //     config()->set('database.connections.mysql.strict', true);
+    //     \DB::reconnect();
+
+    //     $lims_product_with_variant_warehouse_data = Product::join('product_warehouse', 'products.id', '=', 'product_warehouse.product_id')
+    //     ->where([
+    //         ['products.is_active', true],
+    //         //['product_warehouse.warehouse_id', $id],
+    //         ['product_warehouse.qty', '>', 0]
+    //     ])->whereNotNull('product_warehouse.variant_id')->select('product_warehouse.*')->get();
+        
+    //     $product_code = [];
+    //     $product_name = [];
+    //     $product_qty = [];
+    //     $product_price = [];
+    //     $product_data = [];
+        
+    //     //product without variant
+    //     foreach ($lims_product_warehouse_data as $product_warehouse) 
+    //     {
+    //         $product_qty[] = $product_warehouse->qty;
+    //         $product_price[] = $product_warehouse->price;
+    //         $lims_product_data = Product::find($product_warehouse->product_id);
+    //         $product_code[] =  $lims_product_data->code;
+    //         $product_name[] = htmlspecialchars($lims_product_data->name);
+    //         $product_type[] = $lims_product_data->type;
+    //         $product_id[] = $lims_product_data->id;
+    //         $product_list[] = $lims_product_data->product_list;
+    //         $qty_list[] = $lims_product_data->qty_list;
+    //         $batch_no[] = null;
+    //         $product_batch_id[] = null;
+    //     }
+        
+    //     //product with batches
+    //     foreach ($lims_product_with_batch_warehouse_data as $product_warehouse) 
+    //     {
+    //         $product_qty[] = $product_warehouse->qty;
+    //         $product_price[] = $product_warehouse->price;
+    //         $lims_product_data = Product::find($product_warehouse->product_id);
+    //         $product_code[] =  $lims_product_data->code;
+    //         $product_name[] = htmlspecialchars($lims_product_data->name);
+    //         $product_type[] = $lims_product_data->type;
+    //         $product_id[] = $lims_product_data->id;
+    //         $product_list[] = $lims_product_data->product_list;
+    //         $qty_list[] = $lims_product_data->qty_list;
+    //         $product_batch_data = ProductBatch::select('id', 'batch_no')->find($product_warehouse->product_batch_id);
+    //         $batch_no[] = $product_batch_data->batch_no;
+    //         $product_batch_id[] = $product_batch_data->id;
+    //     }
+        
+    //     //product with variant
+    //     foreach ($lims_product_with_variant_warehouse_data as $product_warehouse) 
+    //     {
+    //         $product_qty[] = $product_warehouse->qty;
+    //         $lims_product_data = Product::find($product_warehouse->product_id);
+    //         $lims_product_variant_data = ProductVariant::select('item_code')->FindExactProduct($product_warehouse->product_id, $product_warehouse->variant_id)->first();
+    //         $product_code[] =  $lims_product_variant_data->item_code;
+    //         $product_name[] = htmlspecialchars($lims_product_data->name);
+    //         $product_type[] = $lims_product_data->type;
+    //         $product_id[] = $lims_product_data->id;
+    //         $product_list[] = $lims_product_data->product_list;
+    //         $qty_list[] = $lims_product_data->qty_list;
+    //         $batch_no[] = null;
+    //         $product_batch_id[] = null;
+    //     }
+        
+    //     //retrieve product with type of digital and combo
+    //     $lims_product_data = Product::whereNotIn('type', ['standard'])->where('is_active', true)->get();
+    //     foreach ($lims_product_data as $product) 
+    //     {
+    //         $product_qty[] = $product->qty;
+    //         $product_code[] =  $product->code;
+    //         $product_name[] = $product->name;
+    //         $product_type[] = $product->type;
+    //         $product_id[] = $product->id;
+    //         $product_list[] = $product->product_list;
+    //         $qty_list[] = $product->qty_list;
+    //         $batch_no[] = null;
+    //         $product_batch_id[] = null;
+    //     }
+    //     $product_data = [$product_code, $product_name, $product_qty, $product_type, $product_id, $product_list, $qty_list, $product_price, $batch_no, $product_batch_id];
+    //     return $product_data;
+    // }
 
     // public function getProduct($id)
     // {
